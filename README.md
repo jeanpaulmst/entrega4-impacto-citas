@@ -10,11 +10,12 @@ El índice lateral separa el tallo, que guía el autor, de la copa, que maneja e
 
 | Parte | Sección | Qué muestra |
 |---|---|---|
-| Portada | El proyecto | La pregunta, la oración central y tres números (R² 0,61; 49 % de precisión en candidatos a top 10 %; 97 % de aciertos ±1 tercil) |
+| Portada | El proyecto | La pregunta, la oración central, tres números (error ×2,0 en el número de citas; 65 % de aciertos de tercio; 49 % de precisión en candidatos a top 10 %) y el recorrido de las 4 entregas con el problema de cada una |
 | Tallo | §1 Los datos | Distribución de citas por tramos y terciles, y cuánto se lleva cada tercil (Figura 1, apéndice A) |
 | Tallo | §2 Lo que encontramos | Prestigio de la revista × referencias → % de top 10 % (Figura 2, apéndice B: H2 se sostuvo, H4 no) |
-| Tallo | §3 El modelo | Comparación de familias (media ± desvío), error por tramo y triage por deciles (Figuras 3–5, apéndice C) |
-| Copa | S1 Explorá | Los 10.326 artículos: citas esperadas contra reales, con 4 controles, recuadro de selección y ficha de cada artículo |
+| Tallo | §3 El modelo | Tres preguntas, tres modelos (cuántas citas, en qué tercio, si es top 10 %) y por qué: comparación de familias, error por tramo, tercio predicho contra real y triage por deciles (Figuras 3–6, apéndice C) |
+| Tallo | §4 Lo que logramos | Qué se pudo responder, qué no y por qué |
+| Copa | S1 Explorá | Los 10.326 artículos con ejes elegibles (citas reales, esperadas, probabilidad, prestigio, referencias, autores), color, tendencia, búsqueda, 4 filtros, recuadro de selección, correlación entre ejes, ficha de cada artículo y ranking de los 15 más citados / más sorprendentes |
 | Copa | S2 Probá el modelo | Deslizadores con las 12 columnas → probabilidad de top 10 % (logística elegida) y citas esperadas (Ridge) |
 
 Todos los gráficos están hechos con **Altair** y se dibujan con Vega-Lite en el navegador.

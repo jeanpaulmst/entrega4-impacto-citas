@@ -383,9 +383,65 @@ def g_comparacion(g):
     return alt.hconcat(reg, clf, spacing=60)
 
 
+def g_terciles(datos):
+    """Objetivo 3 en el test: de los artículos a los que el modelo asignó cada tercio, en qué tercio terminaron."""
+    t = datos[datos["particion"] == "test"]
+    tab = t.groupby(["tercil_pred", "tercil_real"]).size().reset_index(name="articulos")
+    tab["parte"] = tab["articulos"] / tab.groupby("tercil_pred")["articulos"].transform("sum")
+    tab["orden"] = tab["tercil_real"].map({x: i for i, x in enumerate(TERCILES)})
+    tab["dijo"] = "el modelo dijo " + tab["tercil_pred"]
+    base = alt.Chart(tab).encode(
+        y=alt.Y("dijo:N", sort=["el modelo dijo " + x for x in TERCILES], title=None, axis=alt.Axis(labelFontSize=13, labelLimit=320)),
+        x=alt.X("parte:Q", stack="normalize", title="en qué tercio de citas terminaron (artículos del test)", axis=alt.Axis(format="%")),
+        order=alt.Order("orden:Q"),
+    )
+    barras = base.mark_bar(height=34).encode(
+        color=alt.Color("tercil_real:N", scale=ESC_TERCIL, title="tercil real", legend=alt.Legend(orient="top")),
+        tooltip=[alt.Tooltip("tercil_pred:N", title="el modelo dijo"), alt.Tooltip("tercil_real:N", title="terminó en"),
+                 alt.Tooltip("articulos:Q", title="artículos", format=",d"), alt.Tooltip("parte:Q", title="parte", format=".1%")],
+    )
+    texto = base.mark_text(fontSize=12.5, fontWeight=600).encode(
+        x=alt.X("parte:Q", stack="normalize", bandPosition=0.5),
+        text=alt.Text("parte:Q", format=".0%"),
+        color=alt.condition("datum.tercil_real == 'T1 · bajo'", alt.value(TINTA), alt.value("white")),
+        opacity=alt.condition("datum.parte > 0.05", alt.value(1), alt.value(0)),
+    )
+    return (barras + texto).properties(width=560, height=170)
+
+
+# Variables que el usuario puede poner en cada eje de «Explorá»: campo -> (nombre, marcas del eje)
+EJES = {
+    "citas_pred": ("citas que esperaba el modelo", [0, 1, 2, 5, 10, 20, 50, 100, 200]),
+    "citas": ("citas reales (2019 – oct. 2026)", [0, 1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000]),
+    "prob": ("probabilidad de top 10 % que dio el modelo", [0, 0.05, 0.1, 0.2, 0.31, 0.5, 0.75, 1]),
+    "prestigio": ("prestigio de la revista (citas por trabajo 2012–2018)", [0, 1, 2, 5, 10, 20, 50, 100, 200]),
+    "refs": ("referencias del artículo", [0, 1, 2, 5, 10, 20, 50, 100, 200, 500]),
+    "autores": ("autores del artículo", [1, 2, 3, 5, 10, 20, 30]),
+}
+ORDEN_RANKING = {
+    "citas": "más citas reales",
+    "citas_pred": "más citas esperadas por el modelo",
+    "prob": "mayor probabilidad de top 10 %",
+    "sorpresa": "más citas de las que esperaba el modelo",
+    "decepcion": "menos citas de las que esperaba el modelo",
+}
+
+
 def g_explora(datos):
     subcampos = ["Todos"] + datos["subcampo"].value_counts().index.tolist()
     oas = ["Todos"] + sorted(datos["oa"].unique().tolist())
+    nombres_ejes = [v[0] for v in EJES.values()]
+    # qué se mira: ejes, color, tendencia (tocan el mapeo de x, y y color)
+    p_x = alt.param(name="eje_x", value="citas_pred", bind=alt.binding_select(options=list(EJES), labels=nombres_ejes, name="Eje horizontal ", element="#c-x"))
+    p_y = alt.param(name="eje_y", value="citas", bind=alt.binding_select(options=list(EJES), labels=nombres_ejes, name="Eje vertical ", element="#c-y"))
+    p_col = alt.param(name="color_por", value="tercil_pred", bind=alt.binding_select(
+        options=["tercil_pred", "tercil_real"], labels=["tercio que predijo el modelo", "tercio real"], name="Color ", element="#c-color"))
+    p_tend = alt.param(name="ver_tend", value=False, bind=alt.binding_checkbox(name="Mostrar la tendencia (mediana) ", element="#c-tend"))
+    p_orden = alt.param(name="orden_rk", value="citas", bind=alt.binding_select(
+        options=list(ORDEN_RANKING), labels=list(ORDEN_RANKING.values()), name="Ranking: los 15 con ", element="#c-orden"))
+    # qué artículos: filtros (achican el universo, tocan los datos de todos los paneles)
+    p_busca = alt.param(name="f_busca", value="", bind=alt.binding(input="search", placeholder="palabra del título o de la revista",
+                                                                   name="Buscar ", element="#c-busca"))
     p_sub = alt.param(name="f_subcampo", value="Todos", bind=alt.binding_select(options=subcampos, name="Subcampo ", element="#c-subcampo"))
     p_oa = alt.param(name="f_oa", value="Todos", bind=alt.binding_select(options=oas, name="Acceso abierto ", element="#c-oa"))
     p_part = alt.param(name="f_part", value="todos", bind=alt.binding_radio(options=["todos", "entrenamiento", "test"],
@@ -393,7 +449,8 @@ def g_explora(datos):
     p_prob = alt.param(name="f_prob", value=0, bind=alt.binding_range(min=0, max=0.9, step=0.05,
                                                                        name="Probabilidad mínima de top 10 % ", element="#c-prob"))
     filtro = ("(f_subcampo == 'Todos' || datum.subcampo == f_subcampo) && (f_oa == 'Todos' || datum.oa == f_oa)"
-              " && (f_part == 'todos' || datum.particion == f_part) && datum.prob >= f_prob")
+              " && (f_part == 'todos' || datum.particion == f_part) && datum.prob >= f_prob"
+              " && (f_busca == '' || indexof(lower(datum.titulo + ' ' + datum.revista), lower(f_busca)) >= 0)")
     brush = alt.selection_interval(name="zona", encodings=["x", "y"])
     elegido = alt.selection_point(name="elegido", fields=["titulo"], on="click", empty=False)
 
@@ -402,23 +459,47 @@ def g_explora(datos):
                alt.Tooltip("citas:Q", title="citas reales"), alt.Tooltip("citas_pred:Q", title="citas que esperaba el modelo", format=".0f"),
                alt.Tooltip("prob:Q", title="probabilidad de top 10 %", format=".0%"),
                alt.Tooltip("top10:N", title="¿fue top 10 %?"), alt.Tooltip("tercil_pred:N", title="tercil predicho"),
-               alt.Tooltip("tercil_real:N", title="tercil real"), alt.Tooltip("particion:N", title="partición")]
-    base = alt.Chart(d).transform_filter(filtro)
+               alt.Tooltip("tercil_real:N", title="tercil real"), alt.Tooltip("prestigio:Q", title="prestigio de la revista"),
+               alt.Tooltip("refs:Q", title="referencias"), alt.Tooltip("autores:Q", title="autores"),
+               alt.Tooltip("particion:N", title="partición")]
+    # el valor de cada eje sale de la variable que eligió el usuario
+    base = alt.Chart(d).transform_filter(filtro).transform_calculate(vx="datum[eje_x]", vy="datum[eje_y]", vc="datum[color_por]")
+
+    def marcas(eje):
+        return alt.ExprRef("{" + ", ".join(f"{k}: {v[1]}" for k, v in EJES.items()) + "}[" + eje + "]")
+
+    etiqueta = "eje_{0} == 'prob' ? format(datum.value, '.0%') : format(datum.value, ',~r')"
+    X = alt.X("vx:Q", scale=alt.Scale(type="symlog"), title=None, axis=alt.Axis(values=marcas("eje_x"), labelExpr=etiqueta.format("x")))
+    Y = alt.Y("vy:Q", scale=alt.Scale(type="symlog"), title=None, axis=alt.Axis(values=marcas("eje_y"), labelExpr=etiqueta.format("y")))
+    W, H = 500, 420
     disp = base.mark_circle(size=16).encode(
-        x=alt.X("citas_pred:Q", scale=alt.Scale(type="symlog"), title="citas que esperaba el modelo (escala log.)",
-                axis=alt.Axis(values=[0, 1, 2, 5, 10, 20, 50, 100, 200])),
-        y=alt.Y("citas:Q", scale=alt.Scale(type="symlog"), title="citas reales (escala log.)",
-                axis=alt.Axis(values=[0, 1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000])),
-        color=alt.condition(brush, alt.Color("tercil_pred:N", scale=ESC_TERCIL, title="tercil predicho",
-                                             legend=alt.Legend(orient="top")), alt.value("#ddd8cf")),
+        x=X, y=Y,
+        color=alt.condition(brush, alt.Color("vc:N", scale=ESC_TERCIL, title="tercil de citas", legend=alt.Legend(orient="top")),
+                            alt.value("#ddd8cf")),
         opacity=alt.condition(elegido, alt.value(1), alt.value(0.55)),
         size=alt.condition(elegido, alt.value(160), alt.value(16)),
         stroke=alt.condition("datum.top10", alt.value(COL_TOP), alt.value(None)),
         strokeWidth=alt.condition("datum.top10", alt.value(0.7), alt.value(0)),
         tooltip=tooltip,
-    ).add_params(p_sub, p_oa, p_part, p_prob, brush, elegido).properties(width=520, height=420)
-    diag = alt.Chart(pd.DataFrame({"x": [0, 2000]})).mark_line(color=TENUE, strokeDash=[4, 4]).encode(
-        x=alt.X("x:Q", scale=alt.Scale(type="symlog")), y=alt.Y("x:Q", scale=alt.Scale(type="symlog")))
+    ).add_params(p_x, p_y, p_col, p_tend, p_orden, p_busca, p_sub, p_oa, p_part, p_prob, brush, elegido).properties(width=W, height=H)
+    # diagonal «acertó»: sólo tiene sentido cuando los dos ejes son citas
+    diag = alt.Chart(pd.DataFrame({"vx": [0, 2000], "vy": [0, 2000]})).transform_filter(
+        "(eje_x == 'citas_pred' && eje_y == 'citas') || (eje_x == 'citas' && eje_y == 'citas_pred')"
+    ).mark_line(color=TENUE, strokeDash=[4, 4]).encode(x=X, y=Y)
+    # tendencia: mediana del eje vertical por tramo (en log) del horizontal
+    tend = base.transform_filter("ver_tend && isValid(datum.vx) && isValid(datum.vy)").transform_calculate(
+        lx="log(1 + datum.vx)").transform_bin("bx", "lx", bin=alt.Bin(maxbins=24)).transform_aggregate(
+        mx="median(vx)", my="median(vy)", n="count()", groupby=["bx"]).transform_filter("datum.n >= 15").mark_line(
+        color=TINTA, strokeWidth=2.5, point=alt.OverlayMarkDef(color=TINTA, size=28)).encode(
+        x=alt.X("mx:Q", scale=alt.Scale(type="symlog")), y=alt.Y("my:Q", scale=alt.Scale(type="symlog")),
+        tooltip=[alt.Tooltip("mx:Q", title="mediana del eje horizontal", format=",.2~f"),
+                 alt.Tooltip("my:Q", title="mediana del eje vertical", format=",.2~f"), alt.Tooltip("n:Q", title="artículos en el tramo")])
+    nombres = "{" + ", ".join(f"{k}: '{v[0]}'" for k, v in EJES.items()) + "}"
+    rotulo = alt.Chart(pd.DataFrame({"a": [0]}))
+    tit_x = rotulo.mark_text(fontSize=13, fontWeight=500, color=TINTA, text=alt.ExprRef(f"{nombres}[eje_x] + ' (escala log.)'")).encode(
+        x=alt.value(W / 2), y=alt.value(H + 34))
+    tit_y = rotulo.mark_text(fontSize=13, fontWeight=500, color=TINTA, angle=270, text=alt.ExprRef(f"{nombres}[eje_y] + ' (escala log.)'")).encode(
+        x=alt.value(-46), y=alt.value(H / 2))
 
     resumen = base.transform_filter(brush).mark_bar().encode(
         y=alt.Y("tercil_pred:N", sort=TERCILES, title="tercil predicho"),
@@ -429,33 +510,70 @@ def g_explora(datos):
                  alt.Tooltip("count():Q", title="artículos")],
     ).properties(width=300, height=150, title=alt.Title("Lo predicho contra lo real", subtitle="artículos visibles (o dentro del recuadro)"))
 
-    # contadores numéricos previos a la agregación
-    base_num = base.transform_calculate(top10_n="datum.top10 ? 1 : 0", cand_n="datum.candidato ? 1 : 0",
-                                        tp_n="(datum.candidato && datum.top10) ? 1 : 0")
-    tabla = base_num.transform_filter(brush).transform_aggregate(
-        n="count()", top="sum(top10_n)", cand="sum(cand_n)", tp="sum(tp_n)"
-    ).transform_fold(["n", "top", "cand", "tp"], as_=["k", "v"]).transform_calculate(
-        etiqueta="{'n':'artículos visibles','top':'top 10 % reales','cand':'candidatos del modelo','tp':'candidatos que acertaron'}[datum.k]",
-        orden="indexof(['n','top','cand','tp'], datum.k)",
+    # contadores y correlación (en log) entre los dos ejes elegidos, sobre lo visible
+    tabla = base.transform_filter(brush).transform_calculate(
+        top10_n="datum.top10 ? 1 : 0", cand_n="datum.candidato ? 1 : 0", tp_n="(datum.candidato && datum.top10) ? 1 : 0",
+        ok="isValid(datum.vx) && isValid(datum.vy) ? 1 : 0",
+    ).transform_calculate(
+        lx="datum.ok ? log(1 + datum.vx) : 0", ly="datum.ok ? log(1 + datum.vy) : 0",
+    ).transform_calculate(lxx="datum.lx * datum.lx", lyy="datum.ly * datum.ly", lxy="datum.lx * datum.ly").transform_aggregate(
+        n="count()", top="sum(top10_n)", cand="sum(cand_n)", tp="sum(tp_n)",
+        m="sum(ok)", sx="sum(lx)", sy="sum(ly)", sxx="sum(lxx)", syy="sum(lyy)", sxy="sum(lxy)",
+    ).transform_calculate(
+        r="(datum.m * datum.sxy - datum.sx * datum.sy) / sqrt((datum.m * datum.sxx - datum.sx * datum.sx) * (datum.m * datum.syy - datum.sy * datum.sy))",
+    ).transform_calculate(
+        t_n="format(datum.n, ',d')", t_top="format(datum.top, ',d')", t_cand="format(datum.cand, ',d')", t_tp="format(datum.tp, ',d')",
+        t_r="isFinite(datum.r) ? format(datum.r, '.2f') : '—'",
+    ).transform_fold(["t_n", "t_top", "t_cand", "t_tp", "t_r"], as_=["k", "v"]).transform_calculate(
+        etiqueta="{'t_n':'artículos visibles','t_top':'top 10 % reales','t_cand':'candidatos del modelo',"
+                 "'t_tp':'candidatos que acertaron','t_r':'correlación entre los ejes (en log)'}[datum.k]",
+        orden="indexof(['t_n','t_top','t_cand','t_tp','t_r'], datum.k)",
     )
     txt_k = tabla.mark_text(align="left", fontSize=12, color=TENUE).encode(
         x=alt.value(0), y=alt.Y("orden:O", axis=None), text="etiqueta:N")
     txt_v = tabla.mark_text(align="right", fontSize=13, fontWeight=600, color=TINTA).encode(
-        x=alt.value(300), y=alt.Y("orden:O", axis=None), text=alt.Text("v:Q", format=",d"))
-    cuadro = (txt_k + txt_v).properties(width=300, height=110, title=alt.Title("En números"))
+        x=alt.value(300), y=alt.Y("orden:O", axis=None), text="v:N")
+    cuadro = (txt_k + txt_v).properties(width=300, height=125, title=alt.Title("En números"))
 
     detalle = base.transform_filter(elegido).transform_calculate(
         filas="[{k:'artículo', v: datum.titulo}, {k:'revista', v: datum.revista}, {k:'citas reales', v: format(datum.citas, ',d')},"
               " {k:'citas esperadas', v: format(datum.citas_pred, ',.0f')}, {k:'prob. top 10 %', v: format(datum.prob, '.0%') + (datum.candidato ? ' → candidato' : ' → no')},"
-              " {k:'¿fue top 10 %?', v: datum.top10 ? 'sí' : 'no'}, {k:'tercil', v: 'predicho ' + datum.tercil_pred + ' · real ' + datum.tercil_real}]"
+              " {k:'¿fue top 10 %?', v: datum.top10 ? 'sí' : 'no'}, {k:'tercil', v: 'predicho ' + datum.tercil_pred + ' · real ' + datum.tercil_real},"
+              " {k:'revista · refs.', v: (isValid(datum.prestigio) ? format(datum.prestigio, ',.1f') + ' citas/trabajo' : 'sin historial') + ' · ' + datum.refs + ' referencias'}]"
     ).transform_flatten(["filas"]).transform_calculate(k="datum.filas.k", v="datum.filas.v").transform_window(fila="row_number()")
     det_k = detalle.mark_text(align="left", fontSize=11, color=TENUE).encode(x=alt.value(0), y=alt.Y("fila:O", axis=None), text="k:N")
     det_v = detalle.mark_text(align="left", fontSize=11, color=TINTA, limit=200).encode(x=alt.value(100), y=alt.Y("fila:O", axis=None), text="v:N")
-    ficha = (det_k + det_v).properties(width=300, height=130, title=alt.Title("Artículo elegido", subtitle="hacé clic en un punto"))
+    ficha = (det_k + det_v).properties(width=300, height=150, title=alt.Title("Artículo elegido", subtitle="hacé clic en un punto"))
 
-    izquierda = disp + diag
+    # ranking: los 15 artículos visibles que más se destacan según el criterio elegido
+    rk = base.transform_filter(brush).transform_calculate(
+        sorpresa="log((1 + datum.citas) / (1 + datum.citas_pred))").transform_calculate(
+        vo="orden_rk == 'decepcion' ? -datum.sorpresa : datum[orden_rk]").transform_filter("isValid(datum.vo)").transform_window(
+        puesto="row_number()", sort=[alt.SortField("vo", order="descending")]).transform_filter("datum.puesto <= 15")
+    # los títulos van en una columna de texto aparte (sin eje), para no correr el origen del panorama de arriba
+    Yrk = alt.Y("titulo:N", sort=alt.EncodingSortField("puesto", order="ascending"), title=None, axis=None)
+    Xrk = alt.X("citas:Q", scale=alt.Scale(type="symlog"), title="citas (escala log.): barra = reales, punto naranja = las que esperaba el modelo",
+                axis=alt.Axis(values=[0, 1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000]))
+    tt_rk = [alt.Tooltip("puesto:Q"), alt.Tooltip("titulo:N", title="artículo"), alt.Tooltip("revista:N"),
+             alt.Tooltip("citas:Q", title="citas reales"), alt.Tooltip("citas_pred:Q", title="citas que esperaba el modelo", format=".0f"),
+             alt.Tooltip("prob:Q", title="probabilidad de top 10 %", format=".0%"), alt.Tooltip("top10:N", title="¿fue top 10 %?")]
+    rk_titulos = rk.transform_calculate(rotulo="datum.puesto + '. ' + datum.titulo").mark_text(
+        align="left", fontSize=11.5, color=TINTA, limit=380).encode(
+        y=Yrk, x=alt.value(0), text="rotulo:N", tooltip=tt_rk,
+        color=alt.condition(elegido, alt.value("#1f4e8c"), alt.value(TINTA))).properties(
+        width=380, height=alt.Step(17),
+        title=alt.Title(alt.ExprRef("'Los 15 artículos visibles con ' + " + "{" + ", ".join(f"{k}: '{v}'" for k, v in ORDEN_RANKING.items()) + "}[orden_rk]"),
+                        subtitle="cambiá el criterio arriba; respeta los filtros y el recuadro"))
+    rk_barras = rk.mark_bar(height=13, color=COL_REAL).encode(
+        y=Yrk, x=Xrk, opacity=alt.condition(elegido, alt.value(1), alt.value(0.75)), tooltip=tt_rk)
+    rk_pred = rk.mark_point(shape="circle", filled=True, size=70, color=COL_PRED, opacity=1).encode(
+        y=Yrk, x=alt.X("citas_pred:Q", scale=alt.Scale(type="symlog")), tooltip=tt_rk)
+    ranking = alt.hconcat(rk_titulos, (rk_barras + rk_pred).properties(width=440, height=alt.Step(17)), spacing=10)
+
+    izquierda = disp + diag + tend + tit_x + tit_y
     derecha = alt.vconcat(resumen, cuadro, ficha, spacing=22)
-    return alt.hconcat(izquierda, derecha, spacing=36).resolve_scale(color="independent")
+    return alt.vconcat(alt.hconcat(izquierda, derecha, spacing=36).resolve_scale(color="independent"), ranking,
+                       spacing=36).resolve_scale(color="independent")
 
 
 def g_proba(m):
@@ -681,6 +799,15 @@ def calcular_textos(g, datos, esq_alta, esq_baja, m):
     T["q_acc"] = pct(rq.loc["Regresión discretizada (elegido)", "accuracy"], 0)
     T["q_pm1"] = pct(rq.loc["Regresión discretizada (elegido)", "acierto ±1 tercil"], 0)
     T["q_kappa"] = fmt(rq.loc["Regresión discretizada (elegido)", "kappa cuadrático"], 3)
+    T["q_piso_acc"] = pct(rq.loc[rq.index[0], "accuracy"], 0)
+    # Qué dice cada tercio predicho en el test (los mismos datos de la Figura 5 y de «Explorá»)
+    dt = datos[datos["particion"] == "test"]
+    T["ter_t1_ok"] = pct((dt.loc[dt.tercil_pred == "T1 · bajo", "tercil_real"] == "T1 · bajo").mean(), 0)
+    T["ter_t3_ok"] = pct((dt.loc[dt.tercil_pred == "T3 · alto", "tercil_real"] == "T3 · alto").mean(), 0)
+    T["ter_ext"] = pct((((dt.tercil_pred == "T1 · bajo") & (dt.tercil_real == "T3 · alto"))
+                        | ((dt.tercil_pred == "T3 · alto") & (dt.tercil_real == "T1 · bajo"))).mean(), 0)
+    # Error típico del regresor como factor multiplicativo sobre (1 + citas)
+    T["factor"] = fmt(np.exp(rt.loc["Gradient Boosting (Elegido)", "MAE log (Test)"]), 1)
 
     # Tablas técnicas
     tr = g["tabla_reg_cv"][["MAE train", "MAE cv", "desvío MAE", "R² cv"]].copy()
@@ -765,6 +892,7 @@ def construir(ruta_nb: Path, ruta_datos: Path, salida: Path):
         "g-hallazgo": graf_hall,
         "g-comparacion": g_comparacion(g),
         "g-tramos": g_tramos(g),
+        "g-terciles": g_terciles(datos),
         "g-triage": g_triage(g),
         "g-explora": g_explora(datos),
         "g-proba": g_proba(modelos),

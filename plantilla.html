@@ -136,6 +136,43 @@ tbody tr:nth-child(even) td { background: rgba(28,27,25,.025); }
 .aviso { border-left: 2px solid var(--naranja); padding: 4px 0 4px 12px; font-size: 14.5px; max-width: 60em; }
 #dijo { font-size: 14px; color: var(--tinta-2); min-height: 1.3em; margin: 8px 0 0; }
 
+/* texto que acompaña a cada figura */
+.lead { max-width: 52em; }
+.mirar { max-width: 52em; font-size: 15.5px; border-left: 2px solid var(--enlace); padding: 2px 0 2px 12px; margin: 10px 0 4px; }
+.mirar b:first-child { font-variant-caps: all-small-caps; letter-spacing: .08em; font-size: 15px; margin-right: 4px; }
+.puente { max-width: 52em; font-style: italic; color: var(--tinta-2); margin-top: 12px; }
+
+/* el recorrido de las cuatro entregas */
+.recorrido { list-style: none; padding: 0; margin: 8px 0 14px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
+  border-top: 1.5px solid var(--tinta); border-bottom: 1.5px solid var(--tinta); }
+.recorrido li { padding: 10px 14px 12px; font-size: 14.5px; line-height: 1.45; }
+.recorrido li + li { border-left: .5px solid var(--filete); }
+.recorrido .etapa { display: block; font: 12px var(--mono); color: var(--gris); letter-spacing: .02em; }
+.recorrido h4 { margin: 2px 0 6px; font-size: 16px; }
+.recorrido p { margin: 0 0 .45em; }
+.recorrido .prob b { font-variant-caps: all-small-caps; letter-spacing: .06em; }
+.recorrido a { font-size: 13.5px; }
+.titulo-rec { font-weight: 700; font-variant-caps: all-small-caps; letter-spacing: .08em; font-size: 15px; text-align: center; margin: 22px 0 0; }
+
+/* las tres preguntas del modelo */
+.preguntas td:first-child { font: 600 15px var(--serif); white-space: nowrap; }
+.preguntas td { font-size: 14px; }
+.veredicto-si { font-weight: 700; color: var(--enlace); }
+.veredicto-medio { font-weight: 700; color: var(--tinta-2); }
+
+/* balance final */
+.balance { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px; margin: 10px 0; }
+.balance h4 { margin-top: 4px; }
+.balance ul { margin: 0; padding-left: 1.1em; }
+.balance li { margin-bottom: .45em; }
+
+/* grupos de controles de «Explorá» */
+.controles .grupo-nom { font-weight: 700; font-variant-caps: all-small-caps; letter-spacing: .08em; font-size: 15px; flex: 0 0 100%; color: var(--tinta-2); }
+.controles + .controles { border-top: 0; margin-top: 0; }
+.vega-bind input[type=search] { font: 14px var(--serif); padding: 3px 6px; border: .5px solid var(--tinta-2); background: var(--papel); color: var(--tinta); border-radius: 2px; width: 230px; max-width: 100%; }
+.guia { max-width: 56em; font-size: 15px; margin: 6px 0 0; padding-left: 1.2em; }
+.guia li { margin-bottom: .3em; }
+
 .referencias { list-style: none; padding: 0; font-size: 15px; max-width: 62em; }
 .referencias li { padding-left: 2.2em; text-indent: -2.2em; margin-bottom: 6px; }
 
@@ -158,6 +195,11 @@ tbody tr:nth-child(even) td { background: rgba(28,27,25,.025); }
 .indice-lat .copa-svg { display: block; width: 100%; max-width: 200px; margin-top: 22px; }
 .con-indice { margin-left: 260px; }
 
+@media (max-width: 1000px) and (min-width: 761px) {
+  .recorrido { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .recorrido li:nth-child(3) { border-left: 0; }
+  .recorrido li:nth-child(n+3) { border-top: .5px solid var(--filete); }
+}
 @media (max-width: 1100px) {
   .indice-lat { position: static; width: auto; margin: 0 calc(-1 * max(16px, env(safe-area-inset-left, 0px))); padding: 14px max(16px, env(safe-area-inset-left, 0px)); box-shadow: none; border-right: 0; border-bottom: .5px solid var(--filete); }
   .indice-lat .marca, .indice-lat .nota, .indice-lat .copa-svg { display: none; }
@@ -171,6 +213,8 @@ tbody tr:nth-child(even) td { background: rgba(28,27,25,.025); }
   body { font-size: 16px; }
   .destacados { grid-template-columns: 1fr; }
   .destacados > div + div { border-left: 0; border-top: .5px solid var(--filete); }
+  .recorrido, .balance { grid-template-columns: minmax(0, 1fr); }
+  .recorrido li + li { border-left: 0; border-top: .5px solid var(--filete); }
   .probar { grid-template-columns: minmax(0, 1fr); }
   .slot input[type=range] { min-width: 0; }
   .resultado { position: static; }
@@ -187,7 +231,8 @@ tbody tr:nth-child(even) td { background: rgba(28,27,25,.025); }
     <li><a href="#portada">El proyecto</a></li>
     <li><a href="#datos">Los datos</a></li>
     <li><a href="#hallazgos">Lo que encontramos</a></li>
-    <li><a href="#modelo">El modelo</a></li></ol></div>
+    <li><a href="#modelo">El modelo</a></li>
+    <li><a href="#balance">Lo que logramos</a></li></ol></div>
   <div class="copa"><h3>Tu turno</h3><ol>
     <li><a href="#explora">Explorá los artículos</a></li>
     <li><a href="#proba">Probá el modelo</a></li></ol></div>
@@ -213,16 +258,36 @@ tbody tr:nth-child(even) td { background: rgba(28,27,25,.025); }
   <p class="afil"><sup>1</sup> Universidad Tecnológica Nacional, Facultad Regional Mendoza · Ciencia de Datos · Grupo 10, comisión 5K09</p>
   <div class="resumen"><p><span class="rotulo">Resumen.</span>Seguimos {{n}} artículos de Ciencia de Materiales publicados en revistas en 2019,
   desde su publicación hasta octubre de 2026, y para cada uno miramos sólo lo que se sabía el día que salió: la revista, la bibliografía, los autores y sus instituciones.
-  Con esas 12 columnas entrenamos un regresor para las citas y un clasificador para el 10 % más citado de cada subtema.</p></div>
-  <p class="tesis">Con lo que se sabe el día de la publicación se explica el {{r2_pct}} de la variación de las citas, y de los artículos que el modelo marca
-  como candidatos a estar entre los más citados, uno de cada dos lo está: {{lift}} veces más que eligiendo al azar.</p>
+  Empezamos queriendo predecir el número de citas. No alcanzó: el número exacto depende de cosas que el día de la publicación no se ven.
+  Pero en el camino encontramos dos preguntas más gruesas que sí se pueden contestar, y para cada una entrenamos un modelo con las mismas 12 columnas.</p></div>
+  <p class="tesis">Cuántas citas va a tener un artículo no se puede adivinar el día que sale, pero sí si va a ser poco o muy citado:
+  el modelo acierta el tercio de citas del {{q_acc}} de los artículos y casi nunca confunde uno poco citado con uno muy citado.</p>
   <div class="destacados" role="list">
-    <div role="listitem"><b>{{r2}}</b><span>de R² en el test para log(1 + citas), contra 0 del piso que predice siempre la mediana.</span></div>
-    <div role="listitem" class="naranja"><b>{{prec}}</b><span>de los candidatos a top 10 % lo fueron de verdad, contra el {{base}} al azar.</span></div>
-    <div role="listitem"><b>{{q_pm1}}</b><span>de los artículos del test cae en su tercio de citas o en el vecino; el {{q_acc}}, exactamente en el suyo.</span></div>
+    <div role="listitem"><b>×{{factor}}</b><span>es el error típico al predecir el número de citas: a un artículo con 20 lo puede estimar en 10 o en 40. La pregunta original queda a medias.</span></div>
+    <div role="listitem"><b>{{q_acc}}</b><span>de los artículos del test cae en el tercio de citas que predijo el modelo, contra el {{q_piso_acc}} del piso. Sólo el {{ter_ext}} salta de un extremo al otro.</span></div>
+    <div role="listitem" class="naranja"><b>{{prec}}</b><span>de los que el modelo marca como candidatos al 10 % más citado lo fueron: {{lift}} veces más que eligiendo al azar ({{base}}).</span></div>
   </div>
-  <p class="claves"><i>Palabras clave:</i> bibliometría · OpenAlex · Ciencia de Materiales · regresión · clasificación desbalanceada · umbral de decisión</p>
-  <p class="nota centro">Las secciones §1 a §3 cuentan la historia en orden; S1 y S2, al final, son para que explores los datos y pruebes el modelo vos.</p>
+  <p class="titulo-rec">Cómo llegamos acá: cuatro entregas, un problema en cada una</p>
+  <ol class="recorrido">
+    <li><span class="etapa">Entrega 1 · el pipeline</span><h4>Juntar los datos</h4>
+      <p>Un DAG de Airflow baja de OpenAlex los artículos de Ciencia de Materiales de 2019 y les suma la historia previa de su revista, autores e instituciones.</p>
+      <p class="prob"><b>Problema:</b> muchas columnas de OpenAlex se calculan con las citas mismas. Usarlas sería hacer trampa: las sacamos.</p>
+      <a href="#datos">→ §1 Los datos</a></li>
+    <li><span class="etapa">Entrega 2 · el análisis</span><h4>Entender qué se predice</h4>
+      <p>Las citas se concentran en pocos artículos, y lo que más las anticipa es la revista y la bibliografía.</p>
+      <p class="prob"><b>Problema:</b> una distribución tan desigual no se puede modelar en crudo. Pasamos a log(1 + citas) y a tercios de igual tamaño.</p>
+      <a href="#hallazgos">→ §2 Lo que encontramos</a></li>
+    <li><span class="etapa">Entrega 3 · el modelo</span><h4>Intentar predecir</h4>
+      <p>El regresor explica el {{r2_pct}} de la variación, pero comprime los extremos: no ve venir a los artículos exitosos.</p>
+      <p class="prob"><b>Problema:</b> el número exacto no sale. Cambiamos la pregunta: ¿poco o muy citado? ¿entre los destacados? Y ajustamos el umbral porque sólo el {{base}} es top 10 %.</p>
+      <a href="#modelo">→ §3 El modelo</a></li>
+    <li><span class="etapa">Entrega 4 · la aplicación</span><h4>Mostrarlo y dejarlo usar</h4>
+      <p>Esta página: la historia en orden y, al final, los datos y el modelo para que los pruebes.</p>
+      <p class="prob"><b>Problema:</b> el mejor regresor no corre en un navegador. Sus predicciones viajan precalculadas, y para probar casos nuevos usamos modelos lineales.</p>
+      <a href="#balance">→ §4 Lo que logramos</a></li>
+  </ol>
+  <p class="claves"><i>Palabras clave:</i> bibliometría · OpenAlex · Ciencia de Materiales · regresión · clasificación ordinal · clasificación desbalanceada</p>
+  <p class="nota centro">Las secciones §1 a §4 cuentan la historia en orden; S1 y S2, al final, son para que explores los datos y pruebes el modelo vos.</p>
  </div>
 </section>
 
@@ -231,13 +296,18 @@ tbody tr:nth-child(even) td { background: rgba(28,27,25,.025); }
  <div class="cuerpo">
   <p class="seccion">§1 · Los datos</p>
   <h2>Las citas están muy concentradas: el tercio más citado se lleva el {{t3_citas}} de todas las citas</h2>
+  <p class="lead">Antes de predecir hay que mirar qué se predice. Seguimos {{n}} artículos durante casi siete años y contamos sus citas.
+  La mitad tiene {{mediana}} citas o menos y el {{cero}} no tiene ninguna, pero unos pocos pasan de las mil (el máximo es {{max}}).</p>
+  <p class="mirar"><b>Qué mirar.</b> En (a), la montaña está a la izquierda y la cola se estira muy lejos a la derecha. En (b), cada tercio tiene la misma
+  cantidad de artículos, pero el tercio alto junta el {{t3_citas}} de las citas y el bajo, apenas el {{t1_citas}}.</p>
   <figure>
    <div class="grafico" id="g-datos"></div>
    <figcaption><b>Figura 1.</b> (a) Artículos por tramo de citas acumuladas entre 2019 y octubre de 2026, coloreados por tercio de la población
-   (cortes en {{cortes}} citas, los mismos que usa el Objetivo 3 y la exploración). (b) El mismo tercio de artículos pesa muy distinto en citas.
-   La mitad de los artículos tiene {{mediana}} citas o menos y el {{cero}} no tiene ninguna, pero la cola llega a {{max}}: el tercio bajo junta el
-   {{t1_citas}} de las citas y el alto el {{t3_citas}}. Por eso el modelo predice <code>log(1 + citas)</code> y no las citas crudas.</figcaption>
+   (cortes en {{cortes}} citas, los mismos que usan el modelo de tercios y la exploración). (b) Parte de los artículos y parte de las citas que se lleva cada tercio.</figcaption>
   </figure>
+  <p class="puente">Esto define todo lo que sigue. Un error de 10 citas es enorme para un artículo con 2 e irrelevante para uno con 500:
+  por eso el modelo trabaja en <code>log(1 + citas)</code>. Y como el número exacto es tan disperso, partimos la población en tres tercios
+  —poco, medianamente y muy citados—, que más adelante se vuelven una de las preguntas del modelo.</p>
   <details><summary>Cómo lo sabemos <small>apéndice A</small></summary><div>
     <h4>De dónde salen y cómo se obtienen</h4>
     <p>De la API de OpenAlex, con un DAG de Apache Airflow (<code>openalex_ingest</code>) en arquitectura medallón: un sensor verifica que la API responda,
@@ -264,12 +334,18 @@ tbody tr:nth-child(even) td { background: rgba(28,27,25,.025); }
  <div class="cuerpo">
   <p class="seccion">§2 · Lo que encontramos</p>
   <h2>La revista y la bibliografía se suman: con las dos en el quintil alto, el {{esq_alta}} de los artículos es top 10 %; con las dos en el bajo, el {{esq_baja}}</h2>
+  <p class="lead">Si las citas no se conocen el día de la publicación, ¿qué sí se conoce? La revista, la bibliografía, los autores y sus instituciones.
+  En el análisis pusimos a prueba varias hipótesis sobre esas columnas, y dos se destacaron sobre el resto: el prestigio que la revista traía de antes
+  y la cantidad de referencias del artículo. Lo importante es que no dicen lo mismo.</p>
+  <p class="mirar"><b>Qué mirar.</b> Recorré el cuadro desde la esquina de abajo a la izquierda hasta la de arriba a la derecha: de {{esq_baja}} a {{esq_alta}}.
+  Y dentro de una misma columna (misma revista), subir de fila sigue sumando: la bibliografía agrega algo que la revista no dice.</p>
   <figure>
    <div class="grafico" id="g-hallazgo"></div>
    <figcaption><b>Figura 2.</b> Porcentaje de artículos que terminaron en el 10 % más citado de su subtema y año (según OpenAlex), por quintil de prestigio previo de la
-   revista (columnas) y de cantidad de referencias (filas). En toda la población es el {{top10}}. El color crece hacia la derecha <em>y</em> hacia arriba: dentro de una
-   misma columna, más referencias sigue sumando. Las dos variables no dicen lo mismo, y por eso son las dos que más pesan en el modelo (§3).</figcaption>
+   revista (columnas) y de cantidad de referencias (filas). En toda la población es el {{top10}}.</figcaption>
   </figure>
+  <p class="puente">Esto le da al modelo de dónde agarrarse: son las dos columnas que más pesan en los tres modelos (§3). Pero también anticipa su límite:
+  aun en la mejor celda, sólo el {{esq_alta}} llega al top 10 %. Lo que hace exitoso a un artículo está, sobre todo, en su contenido.</p>
   <details><summary>Cómo lo sabemos <small>apéndice B</small></summary><div>
     <h4>Una hipótesis que se sostuvo (H2): el efecto del acceso abierto depende de si la revista es <em>core</em></h4>
     <p>El tipo de acceso abierto (<code>oa_status</code>) solo explica η² = {{eta_oa}} de la varianza de log(1 + citas); cruzado con <code>source_is_core</code> sube a η² = {{eta_oa_core}}.
@@ -290,28 +366,63 @@ tbody tr:nth-child(even) td { background: rgba(28,27,25,.025); }
 <section class="hoja" id="modelo" data-parte="tallo" data-titulo="El modelo">
  <div class="cuerpo">
   <p class="seccion">§3 · El modelo</p>
-  <h2>El modelo explica el {{r2_pct}} de las citas y encuentra a los artículos destacados {{lift}} veces mejor que el azar, pero no ve venir a los grandes éxitos</h2>
-  <p style="max-width:52em">Dos objetivos, con las mismas 12 columnas y la misma partición: cuántas citas (regresión sobre log(1 + citas), métrica MAE) y si el artículo termina en el
-  top 10 % (clasificación, métrica f1 macro, porque sólo el {{base}} es positivo y la accuracy no lo ve).</p>
+  <h2>El número exacto de citas no se puede adivinar, pero sí si un artículo va a ser poco o muy citado, y cuáles tienen chances de destacarse</h2>
+  <p class="lead">Empezamos por la pregunta del título: <em>¿cuántas citas?</em> La respuesta quedó a medias, así que no nos quedamos ahí: la partimos en dos preguntas
+  más gruesas, que son las que alguien necesita contestar en la práctica —un editor que decide qué difundir, un comité que tiene que leer cientos de artículos—.
+  Separar los artículos muy citados de los poco citados es mucho más alcanzable que adivinar el número, y es como suele plantearse el problema en la literatura de predicción de citas.
+  Por eso hay tres modelos: uno por pregunta, con las mismas 12 columnas y la misma partición entre entrenamiento y test.</p>
+  <div class="tabla preguntas"><table>
+   <thead><tr><th>Pregunta</th><th>Para qué sirve</th><th>Modelo</th><th>Resultado en el test</th><th>¿Se pudo responder?</th></tr></thead>
+   <tbody>
+    <tr><td>1 · ¿Cuántas citas?</td><td>La pregunta original: estimar el impacto como número.</td><td>Gradient Boosting sobre log(1 + citas)</td>
+     <td>MAE {{mae_test}} contra {{mae_piso}} del piso: el error típico es un factor de ×{{factor}}.</td><td class="veredicto-medio">A medias</td></tr>
+    <tr><td>2 · ¿Poco, medio o muy citado?</td><td>Ubicar al artículo en un tercio de citas: alcanza para ordenar y priorizar.</td><td>El mismo regresor, cortado en tercios</td>
+     <td>Acierta el tercio del {{q_acc}} (piso: {{q_piso_acc}}); el {{q_pm1}} cae en el suyo o el vecino.</td><td class="veredicto-si">Sí</td></tr>
+    <tr><td>3 · ¿Va a estar entre los destacados?</td><td>Marcar candidatos al 10 % más citado de su subtema (compara con su nicho, no con todo el campo).</td><td>Regresión logística, umbral {{umbral}}</td>
+     <td>De los candidatos, el {{prec}} lo fue: {{lift}} veces el azar.</td><td class="veredicto-si">Sí, como triage</td></tr>
+   </tbody></table></div>
+
+  <h3>Primero: los tres aprenden algo que el piso no sabe</h3>
+  <p class="mirar"><b>Qué mirar.</b> Cada punto es un modelo y su línea, cuánto varía entre los cinco folds de validación. Los pisos (gris) quedan lejos de todos;
+  el naranja es el elegido. Cuando dos modelos se pisan, nos quedamos con el más simple.</p>
   <figure>
    <div class="grafico" id="g-comparacion"></div>
-   <figcaption><b>Figura 3.</b> Comparación de familias en validación cruzada (punto: media; línea: ± un desvío entre folds; naranja: el elegido). (a) En regresión, Gradient Boosting
-   le gana a Ridge por más que el desvío y se elige. (b) En clasificación, con el umbral ajustado, la Regresión Logística ({{f1_log_cv}} ± {{f1_log_de}}) y Boosting
-   ({{f1_gb_cv}} ± {{f1_gb_de}}) empatan: se queda la logística, el modelo simple.</figcaption>
+   <figcaption><b>Figura 3.</b> Comparación de familias en validación cruzada (punto: media; línea: ± un desvío entre folds). (a) En regresión, Gradient Boosting
+   le gana a Ridge por más que el desvío y se elige; el modelo de tercios usa ese mismo regresor. (b) En clasificación, con el umbral ajustado, la Regresión Logística ({{f1_log_cv}} ± {{f1_log_de}}) y Boosting
+   ({{f1_gb_cv}} ± {{f1_gb_de}}) empatan: se queda la logística.</figcaption>
   </figure>
+
+  <h3>Pregunta 1 · ¿Cuántas citas? Acierta en el medio, pero no ve venir a los éxitos</h3>
+  <p class="mirar"><b>Qué mirar.</b> Cuanto más larga la línea gris, peor. En el tramo 10–19 el punto real y el predicho casi se tocan
+  (real {{t1019_real}}, predicha {{t1019_pred}}); arriba de 100 citas el modelo dice {{hit_pred}} cuando la mediana real es {{hit_real}}.</p>
   <figure>
    <div class="grafico" id="g-tramos"></div>
-   <figcaption><b>Figura 4.</b> Mediana de citas reales y predichas por el regresor en el test, por tramo de citas reales. En el medio acierta (tramo 10–19: real {{t1019_real}},
-   predicha {{t1019_pred}}), pero comprime los extremos: a los artículos sin citas les asigna ~{{cero_pred}} y a los que pasaron las 100 (mediana real {{hit_real}}) les da {{hit_pred}}.
-   Las columnas del día de publicación dicen que un artículo va a andar bien; que sea un éxito depende del hallazgo.</figcaption>
+   <figcaption><b>Figura 4.</b> Mediana de citas reales y predichas por el regresor en el test, por tramo de citas reales. El modelo comprime los extremos:
+   a los artículos sin citas les asigna ~{{cero_pred}} y a los grandes éxitos, mucho menos de lo que recibieron.</figcaption>
   </figure>
-  <h3>Ordenados por la probabilidad del modelo, en el decil más alto el {{dec10}} fue top 10 %; en la mitad de abajo, el {{dec_bajos}}</h3>
+  <p class="puente">Este es el problema que encontramos. Las columnas del día de publicación dicen que un artículo va a andar bien; que sea un éxito depende del hallazgo,
+  y eso no está en los datos. En vez de seguir forzando el número, preguntamos algo que esas columnas sí pueden contestar.</p>
+
+  <h3>Pregunta 2 · ¿Poco o muy citado? Cuando el modelo dice «muy citado», acierta el {{ter_t3_ok}} de las veces</h3>
+  <p class="mirar"><b>Qué mirar.</b> Cada barra junta a los artículos del test a los que el modelo asignó un tercio, y la pinta según dónde terminaron.
+  Si acertara siempre, cada barra sería de un solo color. En las barras de los extremos casi no hay confusiones graves: el azul oscuro casi no aparece en la barra del tercio bajo,
+  ni el celeste claro en la del alto. Sólo el {{ter_ext}} de los artículos salta de un extremo al otro.</p>
+  <figure>
+   <div class="grafico" id="g-terciles"></div>
+   <figcaption><b>Figura 5.</b> Artículos del test según el tercio de citas que predijo el regresor (filas) y el tercio en el que terminaron (colores, los mismos de la Figura 1).
+   De los que el modelo puso en el tercio bajo, el {{ter_t1_ok}} terminó ahí. El tercio medio es el más difícil: es la frontera con los otros dos.</figcaption>
+  </figure>
+
+  <h3>Pregunta 3 · ¿Destacado? En el 10 % de artículos que el modelo ve más prometedores, el {{dec10}} lo fue; en la mitad de abajo, el {{dec_bajos}}</h3>
+  <p class="mirar"><b>Qué mirar.</b> La escalera: de izquierda a derecha la probabilidad del modelo sube y, con ella, la proporción de artículos que realmente fueron top 10 %.
+  La línea punteada es lo que daría elegir al azar.</p>
   <figure>
    <div class="grafico" id="g-triage"></div>
-   <figcaption><b>Figura 5.</b> Artículos del test agrupados en deciles de probabilidad predicha por la Regresión Logística; la altura es el porcentaje que realmente fue
-   top 10 %. La línea punteada es la tasa al azar ({{base}}). El umbral de {{umbral}}, elegido en validación cruzada, marca como candidatos a los deciles naranjas:
-   el modelo funciona como un triage, no como un oráculo.</figcaption>
+   <figcaption><b>Figura 6.</b> Artículos del test agrupados en deciles de probabilidad predicha por la Regresión Logística; la altura es el porcentaje que realmente fue
+   top 10 %. El umbral de {{umbral}}, elegido en validación cruzada, marca como candidatos a los deciles naranjas.</figcaption>
   </figure>
+  <p class="puente">El modelo funciona como un triage, no como un oráculo: no dice cuáles van a ser los éxitos, pero si hay que leer cien artículos,
+  dice por dónde empezar, y descarta con bastante seguridad a la mitad que casi nunca se destaca.</p>
   <details><summary>Cómo lo sabemos <small>apéndice C</small></summary><div>
     <h4>Métricas y piso</h4>
     <p><b>Regresión:</b> MAE sobre log(1 + citas), que se lee como un factor multiplicativo de error (e<sup>MAE</sup>) y no deja que el 1 % de artículos con cientos de citas domine la pérdida.
@@ -351,21 +462,56 @@ tbody tr:nth-child(even) td { background: rgba(28,27,25,.025); }
  </div>
 </section>
 
+<!-- ================= 4b · BALANCE ================= -->
+<section class="hoja" id="balance" data-parte="tallo" data-titulo="Lo que logramos">
+ <div class="cuerpo">
+  <p class="seccion">§4 · Lo que logramos</p>
+  <h2>No pudimos predecir cuántas citas va a tener un artículo, pero sí si va a ser poco o muy citado, y eso ya sirve para decidir</h2>
+  <p class="lead">Al final del semestre, el balance honesto es este: la pregunta con la que empezamos era interesante, y la respondimos sólo en parte.
+  Lo que sí logramos fue encontrar las preguntas que estos datos pueden contestar, y contestarlas con números que se sostienen en un test que no se tocó hasta el final.</p>
+  <div class="balance">
+   <div><h4>Lo que pudimos responder</h4><ul>
+    <li><b>Si un artículo va a ser poco, medianamente o muy citado:</b> el modelo acierta el tercio del {{q_acc}}, contra el {{q_piso_acc}} del piso, y sólo el {{ter_ext}} salta de un extremo al otro.</li>
+    <li><b>Cuáles tienen chances de destacarse en su subtema:</b> la mitad de los candidatos ({{prec}}) llega al top 10 %, {{lift}} veces el azar; en la mitad de abajo, sólo el {{dec_bajos}}.</li>
+    <li><b>Qué lo anticipa:</b> la revista y la bibliografía, que se suman (§2). Los autores y las instituciones agregan poco una vez que se conoce la revista.</li>
+    <li><b>Qué no importa:</b> el mes de publicación (H4), que esperábamos que pesara.</li>
+   </ul></div>
+   <div><h4>Lo que no, y por qué</h4><ul>
+    <li><b>El número exacto de citas:</b> el error típico es un factor de ×{{factor}}, y a los artículos con más de 100 citas el modelo les da {{hit_pred}} cuando la mediana real es {{hit_real}}.
+     Lo que hace exitoso a un artículo es su contenido, y con lo que se sabe el día de publicación no se ve.</li>
+    <li><b>Más allá de esta población:</b> todo vale para Ciencia de Materiales en 2019. No sabemos si se sostiene en otros campos o años.</li>
+    <li><b>Revistas nuevas:</b> si los folds se arman por revista, la ventaja de Boosting sobre Ridge se reduce a la mitad: el modelo se apoya en conocer la revista.</li>
+    <li><b>Lo que faltó probar:</b> el texto del artículo (título y abstract) no entra en el modelo; es el candidato más claro para ver algo del contenido.</li>
+   </ul></div>
+  </div>
+  <p class="puente">Ahora es tu turno: abajo están los {{n}} artículos con lo que dijo el modelo de cada uno, y un formulario para probarlo con un artículo propio.</p>
+ </div>
+</section>
+
 <!-- ================= 5 · EXPLORÁ ================= -->
 <section class="hoja" id="explora" data-parte="copa" data-titulo="Explorá los artículos">
  <div class="cuerpo">
   <p class="seccion copa">S1 · Tu turno · Explorá</p>
   <h2>Los {{n}} artículos, con lo que esperaba el modelo y lo que pasó</h2>
-  <p style="max-width:56em">Cada punto es un artículo: a lo ancho, las citas que esperaba el modelo; a lo alto, las que recibió. Sobre la diagonal punteada, acertó.
-  Achicá el universo con los controles, arrastrá un recuadro para ver cómo le fue al modelo en esa zona, y pasá el mouse o hacé clic en un punto para ver su ficha.
-  Ningún artículo lo predice un modelo que lo haya visto: los de entrenamiento salen de la validación cruzada y los del test, del modelo final.</p>
-  <div class="controles"><span id="c-subcampo"></span><span id="c-oa"></span><span id="c-part"></span><span id="c-prob"></span></div>
+  <p class="lead" style="max-width:56em">Cada punto es un artículo. Al abrir, a lo ancho están las citas que esperaba el modelo y a lo alto las que recibió: sobre la diagonal punteada, acertó.
+  Pero podés poner en cada eje la variable que quieras —el prestigio de la revista, las referencias, los autores, la probabilidad que dio el modelo— para ver
+  cómo se relaciona cada una con las citas. Ningún artículo lo predice un modelo que lo haya visto: los de entrenamiento salen de la validación cruzada y los del test, del modelo final.</p>
+  <p class="nota" style="margin:8px 0 2px"><b>Algunas preguntas para empezar:</b></p>
+  <ol class="guia">
+   <li>¿Las referencias van de la mano con las citas? Poné <i>referencias del artículo</i> en el eje horizontal, <i>citas reales</i> en el vertical y activá la tendencia. Mirá la correlación en «En números».</li>
+   <li>¿Qué artículos sorprendieron al modelo? Ordená el ranking de abajo por <i>más citas de las que esperaba el modelo</i> y hacé clic en uno para ver su ficha.</li>
+   <li>¿Anda igual en todos los subcampos? Elegí uno en <i>Subcampo</i> y compará el panel «Lo predicho contra lo real» con el de toda la población.</li>
+  </ol>
+  <div class="controles"><span class="grupo-nom">Qué mirar</span><span id="c-x"></span><span id="c-y"></span><span id="c-color"></span><span id="c-tend"></span><span id="c-orden"></span></div>
+  <div class="controles"><span class="grupo-nom">Qué artículos</span><span id="c-busca"></span><span id="c-subcampo"></span><span id="c-oa"></span><span id="c-part"></span><span id="c-prob"></span></div>
   <figure>
    <div class="grafico" id="g-explora"></div>
    <div class="leyenda-col"><span><i style="background:#b9c7d6"></i>T1 · bajo</span><span><i style="background:#5b86b0"></i>T2 · medio</span>
     <span><i style="background:#1d3a5f"></i>T3 · alto</span><span><i style="background:transparent;border:1.5px solid #c9552a;border-radius:50%"></i>fue top 10 %</span></div>
-   <figcaption><b>Figura S1.</b> Color: tercio de citas predicho. Borde naranja: artículos que fueron top 10 %. Ejes en escala logarítmica. A la derecha, el tercio real de los
-   artículos visibles según el tercio predicho, los aciertos de los candidatos y la ficha del artículo elegido.</figcaption>
+   <figcaption><b>Figura S1.</b> Color: tercio de citas (el que predijo el modelo o el real, según el control). Borde naranja: artículos que fueron top 10 %. Ejes en escala logarítmica.
+   Los «Qué artículos» achican el universo de todos los paneles; arrastrá un recuadro sobre los puntos para quedarte con una zona. A la derecha, el tercio real de los
+   artículos visibles según el tercio predicho, los aciertos de los candidatos, la correlación entre los dos ejes elegidos y la ficha del artículo elegido.
+   Abajo, el ranking de los 15 artículos visibles según el criterio elegido. Los artículos sin historial de revista (1 %) no aparecen cuando un eje es el prestigio.</figcaption>
   </figure>
  </div>
 </section>
@@ -405,7 +551,7 @@ tbody tr:nth-child(even) td { background: rgba(28,27,25,.025); }
   <h2>Todo lo que muestra este documento se regenera con un solo comando</h2>
   <div class="dos-col">
    <p class="capitular">El script <code>build_app.py</code> toma el CSV que produce el pipeline de Airflow, ejecuta celda por celda el notebook de la Entrega 3 con la semilla 42,
-   calcula las predicciones fuera de muestra, exporta los coeficientes de la Regresión Logística y de Ridge, arma las siete figuras con Altair y escribe esta página.
+   calcula las predicciones fuera de muestra, exporta los coeficientes de la Regresión Logística y de Ridge, arma las ocho figuras con Altair y escribe esta página.
    Si los datos se actualizan, correrlo de nuevo actualiza la aplicación, y los números coinciden con los del notebook porque salen de su ejecución.</p>
    <p>Las predicciones de «Explorá» viajan con los datos; las de «Probá» se calculan en el navegador con la ecuación (2). Lo que no se puede escribir en el navegador
    (el Gradient Boosting de la regresión) se reemplaza en «Probá» por Ridge, con su diferencia de error declarada en el apéndice C.</p>
