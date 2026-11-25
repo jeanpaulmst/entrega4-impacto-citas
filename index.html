@@ -376,8 +376,8 @@ tbody tr:nth-child(even) td { background: rgba(28,27,25,.025); }
     <p>Una revista es <em>core</em> cuando OpenAlex, con datos del CWTS de Leiden, la marca como central en su campo. Para medir cada efecto usamos η²:
     la parte de la variación de log(1 + citas) que se explica sabiendo a qué grupo pertenece un artículo (0, nada; 1, todo).
     El tipo de acceso abierto (<code>oa_status</code>: si el artículo se puede leer gratis y por qué vía) solo explica η² = 0,164 de la varianza de log(1 + citas); cruzado con <code>source_is_core</code> sube a η² = 0,335.
-    En las revistas <em>core</em> el 14,2 % de los artículos es top 10 %, contra el 0,3 % fuera de ellas. Pero cuando probamos agregar ese cruce como dato extra a un modelo que ya usa todas las columnas, el error casi no se movió
-    (cambia −0,0002 ± 0,0006 en un modelo lineal, por debajo de su propia variación): el prestigio de la revista, medido por cuánto la citan, ya captura ese escalón.</p>
+    En las revistas <em>core</em> el 14,2 % de los artículos es top 10 %, contra el 0,3 % fuera de ellas. En el modelo con todas las columnas juntas, agregar el cruce de las dos como columna nueva no suma
+    (el error promedio del modelo, el MAE que se explica en §3, cambia −0,0002 ± 0,0006 en Ridge): el prestigio continuo de la revista ya captura ese escalón.</p>
     <h4>Una que no (H4): el mes de publicación no cambia las citas</h4>
     <p>Esperábamos que los artículos de enero, con casi un año más de exposición, acumularan más citas. No pasa: la correlación de Spearman entre mes y citas es
     ρ = -0,014, y la mediana de enero (14 citas) es prácticamente la de diciembre (12). Con más de seis años de exposición, unos meses no se ven.</p>
@@ -422,7 +422,7 @@ tbody tr:nth-child(even) td { background: rgba(28,27,25,.025); }
   el naranja es el elegido. Cuando dos modelos se pisan, nos quedamos con el más simple.</p>
   <figure>
    <div class="grafico" id="g-comparacion"></div>
-   <figcaption><b>Figura 3.</b> Comparación de tipos de modelo (familias) en validación cruzada (punto: media; línea: ± un desvío estándar entre folds). (a) En regresión, todos bajan el error del piso (predecir siempre la mediana) y Gradient Boosting
+   <figcaption><b>Figura 3.</b> Comparación de tipos de modelo (familias) en validación cruzada (punto: media; línea: ± un desvío estándar entre folds). (a) En regresión, Gradient Boosting
    le gana a Ridge por más que el desvío y se elige; el modelo de tercios usa ese mismo regresor. (b) En clasificación, con el umbral ajustado, la Regresión Logística (0,718 ± 0,006) y Boosting
    (0,721 ± 0,012) empatan: se queda la logística.</figcaption>
   </figure>
