@@ -243,9 +243,9 @@
  "rangos": {
   "source_pre_cites_per_work": {
    "min": 0.0,
-   "max": 165.0,
+   "max": 164.70000000000002,
    "max_visto": 237.71473278767454,
-   "paso": 0.5,
+   "paso": 0.1,
    "mediana": 29.95535994970135
   },
   "referenced_works_count": {
@@ -264,16 +264,16 @@
   },
   "last_author_pre_cites": {
    "min": 0.0,
-   "max": 98270.0,
+   "max": 98262.0,
    "max_visto": 354985.0,
-   "paso": 10,
+   "paso": 1,
    "mediana": 2601.0
   },
   "first_author_pre_cites": {
    "min": 0.0,
-   "max": 18170.0,
+   "max": 18162.0,
    "max_visto": 103231.0,
-   "paso": 10,
+   "paso": 1,
    "mediana": 217.5
   },
   "institution_max_h_index": {

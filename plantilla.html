@@ -706,7 +706,7 @@ document.getElementById("ej").addEventListener("change", e => {
   const i = e.target.value, dijo = document.getElementById("dijo");
   if (i === "") { dijo.textContent = ""; return; }
   cargar(EJEMPLOS[i].valores);
-  dijo.textContent = "Para este artículo, el modelo final había dado " + Math.round(100 * EJEMPLOS[i].prob_modelo) + " %.";
+  dijo.textContent = "Para este artículo, el modelo final había dado " + (100 * EJEMPLOS[i].prob_modelo).toFixed(0) + " %.";
 });
 document.getElementById("mediana").addEventListener("click", () => {
   document.getElementById("ej").value = ""; document.getElementById("dijo").textContent = ""; cargar(INICIAL);

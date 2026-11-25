@@ -172,8 +172,9 @@ def exportar_modelos(g):
 
     pred_ridge_train = ridge.predict(X_train)
     rangos = {}
-    for c, paso in [("source_pre_cites_per_work", 0.5), ("referenced_works_count", 1), ("funders_count", 1),
-                    ("last_author_pre_cites", 10), ("first_author_pre_cites", 10), ("institution_max_h_index", 1),
+    # pasos finos: un artículo real del test se tiene que poder cargar exacto en los deslizadores
+    for c, paso in [("source_pre_cites_per_work", 0.1), ("referenced_works_count", 1), ("funders_count", 1),
+                    ("last_author_pre_cites", 1), ("first_author_pre_cites", 1), ("institution_max_h_index", 1),
                     ("institutions_count", 1), ("authors_count", 1)]:
         s = X_train[c].dropna()
         rangos[c] = {"min": float(s.min()), "max": float(np.ceil(s.quantile(0.995) / paso) * paso),
@@ -433,7 +434,7 @@ def g_triage(g):
 def g_comparacion(g):
     """Comparación de familias en CV para los dos objetivos (media ± desvío)."""
     r = g["tabla_reg_cv"].reset_index().rename(columns={"index": "modelo"})
-    r = r[~r["modelo"].str.contains("media")]
+    r = r[r["modelo"] != "piso (media)"]
     r = r.assign(lo=r["MAE cv"] - r["desvío MAE"], hi=r["MAE cv"] + r["desvío MAE"],
                  elegido=r["modelo"].eq("gradient boosting").map({True: "elegido", False: "otro"}))
     esc = alt.Scale(domain=["elegido", "otro", "piso"], range=[COL_PRED, COL_REAL, COL_RESTO])
@@ -532,13 +533,20 @@ def g_explora(datos):
                                                                          name="Partición ", element="#c-part"))
     p_prob = alt.param(name="f_prob", value=0, bind=alt.binding_range(min=0, max=0.9, step=0.05,
                                                                        name="Probabilidad mínima de top 10 % ", element="#c-prob"))
-    filtro = ("(f_subcampo == 'Todos' || datum.subcampo == f_subcampo) && (f_oa == 'Todos' || datum.oa == f_oa)"
+    filtro = ("datum._s == 1 || ((f_subcampo == 'Todos' || datum.subcampo == f_subcampo) && (f_oa == 'Todos' || datum.oa == f_oa)"
               " && (f_part == 'todos' || datum.particion == f_part) && datum.prob >= f_prob"
-              " && (f_busca == '' || indexof(lower(datum.titulo + ' ' + datum.revista), lower(f_busca)) >= 0)")
+              " && (f_busca == '' || indexof(lower(datum.titulo + ' ' + datum.revista), lower(f_busca)) >= 0)"
+              # los artículos sin historial de revista no se pueden ubicar en un eje de prestigio: tampoco se cuentan
+              " && ((eje_x != 'prestigio' && eje_y != 'prestigio') || isValid(datum.prestigio)))")
     brush = alt.selection_interval(name="zona", encodings=["x", "y"])
     elegido = alt.selection_point(name="elegido", fields=["titulo"], on="click", empty=False)
 
-    d = datos.reset_index(drop=True)
+    # Una fila «centinela» (_s = 1) que pasa todos los filtros: garantiza que «En números» y el aviso de
+    # «ningún artículo» tengan siempre una fila que agregar, aunque los filtros dejen vacío el universo.
+    d = datos.reset_index(drop=True).assign(_s=0)
+    centinela = {c: (False if d[c].dtype == bool else ("" if d[c].dtype == object else None)) for c in d.columns}
+    d = pd.concat([d, pd.DataFrame([{**centinela, "_s": 1}])], ignore_index=True)
+    tope_citas = float(max(datos["citas"].max(), datos["citas_pred"].max()))
     tooltip = [alt.Tooltip("titulo:N", title="artículo"), alt.Tooltip("revista:N"), alt.Tooltip("subcampo:N"),
                alt.Tooltip("citas:Q", title="citas reales"), alt.Tooltip("citas_pred:Q", title="citas que esperaba el modelo", format=".0f"),
                alt.Tooltip("prob:Q", title="probabilidad de top 10 %", format=".0%"),
@@ -547,7 +555,8 @@ def g_explora(datos):
                alt.Tooltip("refs:Q", title="referencias"), alt.Tooltip("autores:Q", title="autores"),
                alt.Tooltip("particion:N", title="partición")]
     # el valor de cada eje sale de la variable que eligió el usuario
-    base = alt.Chart(d).transform_filter(filtro).transform_calculate(vx="datum[eje_x]", vy="datum[eje_y]", vc="datum[color_por]")
+    base_s = alt.Chart(d).transform_filter(filtro).transform_calculate(vx="datum[eje_x]", vy="datum[eje_y]", vc="datum[color_por]")
+    base = base_s.transform_filter("datum._s == 0")          # lo que se dibuja: sin la centinela
 
     def marcas(eje):
         return alt.ExprRef("{" + ", ".join(f"{k}: {v[1]}" for k, v in EJES.items()) + "}[" + eje + "]")
@@ -580,9 +589,9 @@ def g_explora(datos):
                  alt.Tooltip("my:Q", title="mediana del eje vertical", format=",.2~f"), alt.Tooltip("n:Q", title="artículos en el tramo")])
     nombres = "{" + ", ".join(f"{k}: '{v[0]}'" for k, v in EJES.items()) + "}"
     rotulo = alt.Chart(pd.DataFrame({"a": [0]}))
-    tit_x = rotulo.mark_text(fontSize=13, fontWeight=500, color=TINTA, text=alt.ExprRef(f"{nombres}[eje_x] + ' (escala log.)'")).encode(
+    tit_x = rotulo.mark_text(fontSize=13, fontWeight=500, color=TINTA, text=alt.ExprRef(f"{nombres}[eje_x] + (eje_x == 'prob' ? '' : ' (escala log.)')")).encode(
         x=alt.value(W / 2), y=alt.value(H + 34))
-    tit_y = rotulo.mark_text(fontSize=13, fontWeight=500, color=TINTA, angle=270, text=alt.ExprRef(f"{nombres}[eje_y] + ' (escala log.)'")).encode(
+    tit_y = rotulo.mark_text(fontSize=13, fontWeight=500, color=TINTA, angle=270, text=alt.ExprRef(f"{nombres}[eje_y] + (eje_y == 'prob' ? '' : ' (escala log.)')")).encode(
         x=alt.value(-46), y=alt.value(H / 2))
 
     resumen = base.transform_filter(brush).mark_bar().encode(
@@ -595,13 +604,13 @@ def g_explora(datos):
     ).properties(width=300, height=150, title=alt.Title("Lo predicho contra lo real", subtitle="artículos visibles (o dentro del recuadro)"))
 
     # contadores y correlación (en log) entre los dos ejes elegidos, sobre lo visible
-    tabla = base.transform_filter(brush).transform_calculate(
-        top10_n="datum.top10 ? 1 : 0", cand_n="datum.candidato ? 1 : 0", tp_n="(datum.candidato && datum.top10) ? 1 : 0",
-        ok="isValid(datum.vx) && isValid(datum.vy) ? 1 : 0",
+    tabla = base_s.transform_filter({"or": [{"param": "zona"}, "datum._s == 1"]}).transform_calculate(
+        real="1 - datum._s", top10_n="datum.top10 ? 1 : 0", cand_n="datum.candidato ? 1 : 0", tp_n="(datum.candidato && datum.top10) ? 1 : 0",
+        ok="datum._s == 0 && isValid(datum.vx) && isValid(datum.vy) ? 1 : 0",
     ).transform_calculate(
         lx="datum.ok ? log(1 + datum.vx) : 0", ly="datum.ok ? log(1 + datum.vy) : 0",
     ).transform_calculate(lxx="datum.lx * datum.lx", lyy="datum.ly * datum.ly", lxy="datum.lx * datum.ly").transform_aggregate(
-        n="count()", top="sum(top10_n)", cand="sum(cand_n)", tp="sum(tp_n)",
+        n="sum(real)", top="sum(top10_n)", cand="sum(cand_n)", tp="sum(tp_n)",
         m="sum(ok)", sx="sum(lx)", sy="sum(ly)", sxx="sum(lxx)", syy="sum(lyy)", sxy="sum(lxy)",
     ).transform_calculate(
         r="(datum.m * datum.sxy - datum.sx * datum.sy) / sqrt((datum.m * datum.sxx - datum.sx * datum.sx) * (datum.m * datum.syy - datum.sy * datum.sy))",
@@ -636,7 +645,7 @@ def g_explora(datos):
         puesto="row_number()", sort=[alt.SortField("vo", order="descending")]).transform_filter("datum.puesto <= 15")
     # los títulos van en una columna de texto aparte (sin eje), para no correr el origen del panorama de arriba
     Yrk = alt.Y("titulo:N", sort=alt.EncodingSortField("puesto", order="ascending"), title=None, axis=None)
-    Xrk = alt.X("citas:Q", scale=alt.Scale(type="symlog"), title="citas (escala log.): barra = reales, punto naranja = las que esperaba el modelo",
+    Xrk = alt.X("citas:Q", scale=alt.Scale(type="symlog", domain=[0, tope_citas]), title="citas (escala log.): barra = reales, punto naranja = las que esperaba el modelo",
                 axis=alt.Axis(values=[0, 1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000]))
     tt_rk = [alt.Tooltip("puesto:Q"), alt.Tooltip("titulo:N", title="artículo"), alt.Tooltip("revista:N"),
              alt.Tooltip("citas:Q", title="citas reales"), alt.Tooltip("citas_pred:Q", title="citas que esperaba el modelo", format=".0f"),
@@ -651,10 +660,13 @@ def g_explora(datos):
     rk_barras = rk.mark_bar(height=13, color=COL_REAL).encode(
         y=Yrk, x=Xrk, opacity=alt.condition(elegido, alt.value(1), alt.value(0.75)), tooltip=tt_rk)
     rk_pred = rk.mark_point(shape="circle", filled=True, size=70, color=COL_PRED, opacity=1).encode(
-        y=Yrk, x=alt.X("citas_pred:Q", scale=alt.Scale(type="symlog")), tooltip=tt_rk)
+        y=Yrk, x=alt.X("citas_pred:Q", scale=alt.Scale(type="symlog", domain=[0, tope_citas])), tooltip=tt_rk)
     ranking = alt.hconcat(rk_titulos, (rk_barras + rk_pred).properties(width=440, height=alt.Step(17)), spacing=10)
 
-    izquierda = disp + diag + tend + tit_x + tit_y
+    vacio = base_s.transform_calculate(real="1 - datum._s").transform_aggregate(n="sum(real)").transform_filter("datum.n == 0").mark_text(
+        fontSize=15, fontWeight=600, color=TENUE, text="Ningún artículo cumple estos filtros: probá aflojar alguno").encode(
+        x=alt.value(W / 2), y=alt.value(H / 2))
+    izquierda = disp + diag + tend + tit_x + tit_y + vacio
     derecha = alt.vconcat(resumen, cuadro, ficha, spacing=22)
     return alt.vconcat(alt.hconcat(izquierda, derecha, spacing=36).resolve_scale(color="independent"), ranking,
                        spacing=36).resolve_scale(color="independent")
@@ -676,7 +688,7 @@ def g_proba(m):
     params = {}
     for c, etiqueta in nombres.items():
         r = R[c]
-        params[c] = alt.param(name=f"p_{c}", value=round(r["mediana"] / r["paso"]) * r["paso"],
+        params[c] = alt.param(name=f"p_{c}", value=round(round(r["mediana"] / r["paso"]) * r["paso"], 6),
                               bind=alt.binding_range(min=r["min"], max=r["max"], step=r["paso"], name=etiqueta + " ",
                                                      element=f"#d-{c}"))
     params["oa"] = alt.param(name="p_oa", value="closed", bind=alt.binding_select(options=m["oa_categorias"], name="Acceso abierto ", element="#d-oa"))
@@ -720,6 +732,7 @@ def g_proba(m):
         citas="max(0, exp(datum.logc) - 1)",
         tercil=f"datum.logc <= {c1} ? 'T1 · bajo' : (datum.logc <= {c2} ? 'T2 · medio' : 'T3 · alto')",
         veredicto=f"datum.prob >= {U} ? 'Candidato a top 10 %' : 'No llega al umbral de candidato'",
+        t_prob=f"abs(datum.prob - {U}) < 0.005 ? format(datum.prob, '.2%') : format(datum.prob, '.0%')",
         fuera="(p_source_pre_cites_per_work > " + str(R["source_pre_cites_per_work"]["max_visto"]) + ") ? 1 : 0",
     )
     fondo = alt.Chart(pd.DataFrame({"a": [0], "b": [1]})).mark_bar(color="#ece8e0", height=34).encode(
@@ -736,7 +749,7 @@ def g_proba(m):
     panel_prob = (fondo + barra + regla_u + txt_u + regla_b + txt_b).properties(width=440, height=90)
 
     num = base.mark_text(align="left", baseline="middle", fontSize=44, fontWeight=600).encode(
-        x=alt.value(0), y=alt.value(30), text=alt.Text("prob:Q", format=".0%"),
+        x=alt.value(0), y=alt.value(30), text="t_prob:N",
         color=alt.condition(f"datum.prob >= {U}", alt.value(COL_TOP), alt.value(TINTA)))
     verd = base.mark_text(align="left", baseline="middle", fontSize=19, fontWeight=600).encode(
         x=alt.value(118), y=alt.value(18), text="veredicto:N",
@@ -938,32 +951,54 @@ def calcular_textos(g, datos, m):
 # ------------------------------------------------------------------
 # 5. Página
 # ------------------------------------------------------------------
-def ejemplos_probar(g, datos):
-    """Artículos reales del test para cargar en «Probá el modelo»."""
+def ejemplos_probar(g, datos, m):
+    """Artículos reales del test para cargar en «Probá el modelo».
+
+    Sólo entran los que caben en los deslizadores (del mínimo al percentil 99,5 de cada columna) y no están
+    pegados al umbral, para que lo que muestran los controles sea exactamente lo que se calcula.
+    """
+    R, U = m["rangos"], float(g["UMBRAL"])
     X_test = g["X_test"]
-    d = datos.loc[X_test.index].join(X_test[["funders_count", "last_author_pre_cites", "first_author_pre_cites",
+    d = datos.loc[X_test.index].join(X_test[["source_pre_cites_per_work", "funders_count", "last_author_pre_cites", "first_author_pre_cites",
                                              "institution_max_h_index", "institutions_count", "in_pubmed"]])
-    d = d.dropna(subset=["prestigio", "last_author_pre_cites", "first_author_pre_cites"])
+    d = d.dropna(subset=["source_pre_cites_per_work", "last_author_pre_cites", "first_author_pre_cites"])
+    d["source_pre_cites_per_work"] = d["source_pre_cites_per_work"].round(1)
+    col_slider = {"source_pre_cites_per_work": "source_pre_cites_per_work", "referenced_works_count": "refs", "authors_count": "autores",
+                  "institutions_count": "institutions_count", "institution_max_h_index": "institution_max_h_index",
+                  "last_author_pre_cites": "last_author_pre_cites", "first_author_pre_cites": "first_author_pre_cites", "funders_count": "funders_count"}
+    entra = pd.Series(True, index=d.index)
+    for c, col in col_slider.items():
+        v = d[col] if c != "institution_max_h_index" else d[col].fillna(R[c]["mediana"])
+        entra &= v.between(R[c]["min"], R[c]["max"])
+    d = d[entra]
+    # la probabilidad del modelo, recalculada con los valores exactos que se cargan
+    X = X_test.loc[d.index].copy()
+    X["source_pre_cites_per_work"] = d["source_pre_cites_per_work"]
+    d["prob_exacta"] = g["modelo_clf_final"].predict_proba(X)[:, 1]
+    d = d[(d["prob_exacta"] - U).abs() >= 0.03]
+    cand = d["prob_exacta"] >= U
     elegidos = []
-    for cond, n in [((d.top10) & (d.candidato), 3), ((~d.top10) & (~d.candidato), 2), ((d.top10) & (~d.candidato), 2), ((~d.top10) & (d.candidato), 1)]:
-        sub = d[cond].sort_values("prob", ascending=False)
+    for cond, n in [((d.top10) & cand, 3), ((~d.top10) & (~cand), 2), ((d.top10) & (~cand), 2), ((~d.top10) & cand, 1)]:
+        sub = d[cond].sort_values("prob_exacta", ascending=False)
         idx = np.linspace(0, len(sub) - 1, n).astype(int) if len(sub) else []
         elegidos += [sub.iloc[i] for i in idx]
     res = []
     for r in elegidos:
-        tipo = ("acierto · fue top 10 %" if r.top10 and r.candidato else "acierto · no fue top 10 %" if not r.top10 and not r.candidato
+        es_cand = r.prob_exacta >= U
+        tipo = ("acierto · fue top 10 %" if r.top10 and es_cand else "acierto · no fue top 10 %" if not r.top10 and not es_cand
                 else "se le escapó · fue top 10 %" if r.top10 else "falsa alarma · no fue top 10 %")
+        h = R["institution_max_h_index"]["mediana"] if pd.isna(r.institution_max_h_index) else r.institution_max_h_index
         res.append({
             "etiqueta": f"{r.titulo[:60]}… · {r.revista[:32]} · {r.citas} citas ({tipo})",
             "valores": {
-                "p_source_pre_cites_per_work": float(r.prestigio), "p_referenced_works_count": int(r.refs),
+                "p_source_pre_cites_per_work": float(r.source_pre_cites_per_work), "p_referenced_works_count": int(r.refs),
                 "p_authors_count": int(r.autores), "p_institutions_count": int(r.institutions_count),
-                "p_institution_max_h_index": float(0 if pd.isna(r.institution_max_h_index) else r.institution_max_h_index),
+                "p_institution_max_h_index": float(round(h)),
                 "p_last_author_pre_cites": float(r.last_author_pre_cites), "p_first_author_pre_cites": float(r.first_author_pre_cites),
                 "p_funders_count": int(r.funders_count), "p_oa": r.oa, "p_core": bool(r.core), "p_pubmed": bool(r.in_pubmed),
                 "p_sinrev": False,
             },
-            "prob_modelo": float(r.prob),
+            "prob_modelo": float(r.prob_exacta),
         })
     return res
 
@@ -991,7 +1026,7 @@ def construir(ruta_nb: Path, ruta_datos: Path, salida: Path):
     T["fecha_datos"] = time.strftime("%d/%m/%Y", time.localtime(ruta_datos.resolve().stat().st_mtime))
     T["fecha_build"] = time.strftime("%d/%m/%Y")
     T["slider_tope"] = fmt(modelos["rangos"]["referenced_works_count"]["max"], 0)
-    ejemplos = ejemplos_probar(g, datos)
+    ejemplos = ejemplos_probar(g, datos, modelos)
     opciones = "".join(f'<option value="{i}">{e["etiqueta"]}</option>' for i, e in enumerate(ejemplos))
 
     html = (AQUI / "plantilla.html").read_text(encoding="utf-8")
@@ -1000,7 +1035,7 @@ def construir(ruta_nb: Path, ruta_datos: Path, salida: Path):
     html = (html.replace("{{opciones_ejemplos}}", opciones)
                 .replace("{{SPECS}}", json.dumps(specs, ensure_ascii=False, separators=(",", ":")))
                 .replace("{{EJEMPLOS}}", json.dumps(ejemplos, ensure_ascii=False))
-                .replace("{{MEDIANAS}}", json.dumps({f"p_{c}": round(r["mediana"] / r["paso"]) * r["paso"] for c, r in modelos["rangos"].items()}))
+                .replace("{{MEDIANAS}}", json.dumps({f"p_{c}": round(round(r["mediana"] / r["paso"]) * r["paso"], 6) for c, r in modelos["rangos"].items()}))
                 .replace("{{VEGA}}", VEGA).replace("{{VEGA_LITE}}", VEGA_LITE).replace("{{VEGA_EMBED}}", VEGA_EMBED))
     faltan = sorted(set(re.findall(r"\{\{(\w+)\}\}", html)))
     if faltan:
