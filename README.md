@@ -11,9 +11,9 @@ El índice lateral separa el tallo, que guía el autor, de la copa, que maneja e
 | Parte | Sección | Qué muestra |
 |---|---|---|
 | Portada | El proyecto | La pregunta, la oración central, tres números (error ×2,0 en el número de citas; 65 % de aciertos de tercio; 49 % de precisión en candidatos a top 10 %) y el recorrido de las 4 entregas con el problema de cada una |
-| Tallo | §1 Los datos | Distribución de citas por tramos y terciles, y cuánto se lleva cada tercil (Figura 1, apéndice A) |
-| Tallo | §2 Qué anticipa las citas | Revista muy citada y bibliografía larga → % en el tercio más citado: ninguna, una o las dos pistas (Figura 2; apéndice B: grilla 3 × 3, H2 se sostuvo, H4 no) |
-| Tallo | §3 El modelo | Tres preguntas, tres modelos (cuántas citas, en qué tercio, si es top 10 %) y por qué: comparación de familias, error por tramo, tercio predicho contra real y triage por deciles (Figuras 3–6, apéndice C) |
+| Tallo | §1 Los datos | Distribución de citas por tramos y terciles, y cuánto se lleva cada tercil (Figura 1) |
+| Tallo | §2 Qué anticipa las citas | Revista muy citada y bibliografía larga → % en el tercio más citado: ninguna, una o las dos pistas (Figura 2; grilla 3 × 3, H2 se sostuvo, H4 no) |
+| Tallo | §3 El modelo | Tres preguntas, tres modelos (cuántas citas, en qué tercio, si es top 10 %) y por qué: comparación de familias, error por tramo, tercio predicho contra real y triage por deciles (Figuras 3–6) |
 | Tallo | §4 Lo que logramos | Qué se pudo responder, qué no y por qué |
 | Copa | S1 Explorá | Los 10.326 artículos con ejes elegibles (citas reales, esperadas, probabilidad, prestigio, referencias, autores), color, tendencia, búsqueda, 4 filtros, recuadro de selección, correlación entre ejes, ficha de cada artículo y ranking de los 15 más citados / más sorprendentes |
 | Copa | S2 Probá el modelo | Deslizadores con las 12 columnas → probabilidad de top 10 % (logística elegida) y citas esperadas (Ridge) |

@@ -270,25 +270,96 @@ def g_hallazgo(datos):
     grilla = pd.DataFrame({"rev": nivel_rev, "bib": nivel_bib, "alto": alto}).groupby(["rev", "bib"])["alto"].agg(["mean", "size"])
     base = alto.mean()
 
-    grupos = [("Ninguna de las dos", 0, 0), ("Sólo bibliografía larga", 0, 2), ("Sólo revista muy citada", 2, 0), ("Las dos", 2, 2)]
-    barras = pd.DataFrame([{"grupo": nom, "t3": grilla.loc[(r, b), "mean"], "n": int(grilla.loc[(r, b), "size"]), "dos": r + b == 4}
-                           for nom, r, b in grupos])
-    orden = [g[0] for g in grupos]
-    y = alt.Y("grupo:N", sort=orden, title=None, axis=alt.Axis(labelLimit=320, domain=False, ticks=False, labelPadding=8))
-    x = alt.X("t3:Q", scale=alt.Scale(domain=[0, 1]), axis=alt.Axis(format=".0%", tickCount=5), title="artículos en el tercio más citado")
-    base_b = alt.Chart(barras).encode(y=y, x=x)
-    rect = base_b.mark_bar(height=30, cornerRadiusEnd=2).encode(
-        color=alt.Color("dos:N", scale=alt.Scale(domain=[False, True], range=[COL_TERCIL["T2 · medio"], COL_TERCIL["T3 · alto"]]), legend=None),
-        tooltip=[alt.Tooltip("grupo:N", title="grupo"), alt.Tooltip("t3:Q", title="en el tercio alto", format=".1%"),
-                 alt.Tooltip("n:Q", title="artículos", format=",d")],
-    )
-    valor = base_b.mark_text(align="left", dx=6, fontSize=14, fontWeight=600, color=TINTA).encode(text=alt.Text("t3:Q", format=".0%"))
-    cuantos = base_b.mark_text(align="left", dx=50, fontSize=12, color="#8a857a", font="IBM Plex Mono, monospace").encode(
-        text=alt.Text("n:Q", format=",d"))
-    ref = pd.DataFrame({"x": [base], "t": [f"promedio: {pct(base, 0)}"]})
-    linea = alt.Chart(ref).mark_rule(strokeDash=[4, 3], color=TENUE).encode(x="x:Q")
-    rotulo = alt.Chart(ref).mark_text(y=-8, align="left", dx=4, fontSize=12, fontStyle="italic", color=TENUE).encode(x="x:Q", text="t:N")
-    graf = (rect + valor + cuantos + linea + rotulo).properties(width=520, height=210)
+    lim_rev = d["prestigio"].quantile([1 / 3, 2 / 3]).values
+    lim_bib = d["refs"].quantile([1 / 3, 2 / 3]).values
+    r_lo, r_hi = fmt(lim_rev[0], 0), fmt(lim_rev[1], 0)
+    b_lo, b_hi = fmt(lim_bib[0], 0), fmt(lim_bib[1], 0)
+    grupos = [("Ninguna de las dos", f"revista con menos de {r_lo} citas por trabajo y menos de {b_lo} referencias", 0, 0),
+              ("Sólo bibliografía larga", f"más de {b_hi} referencias, pero revista con menos de {r_lo} citas por trabajo", 0, 2),
+              ("Sólo revista muy citada", f"revista con más de {r_hi} citas por trabajo, pero menos de {b_lo} referencias", 2, 0),
+              ("Las dos", f"revista con más de {r_hi} citas por trabajo y más de {b_hi} referencias", 2, 2)]
+    barras = pd.DataFrame([{"grupo": nom, "detalle": det, "t3": grilla.loc[(r, b), "mean"], "n": int(grilla.loc[(r, b), "size"])}
+                           for nom, det, r, b in grupos])
+
+    # Un solo lienzo en unidades 0–100: a la izquierda los tercios de la Figura 1, a la derecha los grupos,
+    # y una flecha de cada grupo al tercio alto, más gruesa cuanto más artículos del grupo llegan.
+    X0, LARGO = 44, 52                      # dónde empiezan las barras de los grupos y cuánto mide el 100 %
+    filas = [86, 62, 38, 14]                # centro vertical de cada grupo (de arriba abajo)
+    destino = [93, 86, 79, 72]              # dónde llega cada flecha dentro del bloque del tercio alto
+    barras["y"], barras["yt"] = filas, destino
+    barras["x_ini"], barras["x_fin"], barras["x_tope"], barras["x_punta"] = X0, X0 + LARGO * barras["t3"], X0 + LARGO, 23.2
+    barras["pct_txt"] = barras["t3"].map(lambda v: pct(v, 0))
+    Xu = alt.X("x:Q", scale=alt.Scale(domain=[0, 100]), axis=None)
+    Yu = alt.Y("y:Q", scale=alt.Scale(domain=[0, 108]), axis=None)
+    tt = [alt.Tooltip("grupo:N"), alt.Tooltip("detalle:N", title="quiénes son"), alt.Tooltip("n:Q", title="artículos", format=",d"),
+          alt.Tooltip("t3:Q", title="llegan al tercio alto", format=".1%")]
+
+    # columna de los tercios (la misma partición y los mismos colores de la Figura 1)
+    bloques = []
+    for i, t in enumerate(TERCILES):
+        c = datos.loc[datos["tercil_real"] == t, "citas"]
+        rango = f"{fmt(c.min(), 0)} o más citas" if i == 2 else f"{fmt(c.min(), 0)} a {fmt(c.max(), 0)} citas"
+        bloques.append({"tercil": t, "nombre": ["tercio bajo", "tercio medio", "tercio alto"][i], "rango": rango,
+                        "x": 0, "x2": 22, "xm": 11, "y": 32 * i, "y2": 32 * i + 31, "yc": 32 * i + 15.5})
+    bl = pd.DataFrame(bloques)
+    col = alt.Chart(bl).mark_rect(cornerRadius=2).encode(
+        x=Xu, x2="x2:Q", y=Yu, y2="y2:Q",
+        color=alt.Color("tercil:N", scale=ESC_TERCIL, legend=None),
+        tooltip=[alt.Tooltip("nombre:N", title="tercio"), alt.Tooltip("rango:N", title="citas")])
+    col_nom = alt.Chart(bl).mark_text(fontSize=13, fontWeight=600, dy=-8).encode(
+        x=alt.X("xm:Q", scale=alt.Scale(domain=[0, 100]), axis=None), y=alt.Y("yc:Q", scale=alt.Scale(domain=[0, 108]), axis=None), text="nombre:N",
+        color=alt.condition("datum.tercil == 'T1 · bajo'", alt.value(TINTA), alt.value("white")))
+    col_rango = alt.Chart(bl).mark_text(fontSize=11.5, dy=9).encode(
+        x=alt.X("xm:Q", scale=alt.Scale(domain=[0, 100]), axis=None), y=alt.Y("yc:Q", scale=alt.Scale(domain=[0, 108]), axis=None), text="rango:N",
+        color=alt.condition("datum.tercil == 'T1 · bajo'", alt.value(TINTA), alt.value("white")))
+
+    # flechas: curva de la barra del grupo al bloque del tercio alto, con la punta horizontal
+    tramos = []
+    for _, r in barras.iterrows():
+        for k, (x, y) in enumerate([(X0 - 1, r.y), (X0 - 9, r.y), (30, r.yt), (23.6, r.yt)]):
+            tramos.append({"grupo": r.grupo, "k": k, "x": x, "y": y, "t3": r.t3})
+    tr = pd.DataFrame(tramos)
+    grosor = alt.Scale(domain=[0, 1], range=[1, 9])
+    flechas = alt.Chart(tr).mark_line(interpolate="basis", color=COL_TERCIL["T3 · alto"], opacity=0.75).encode(
+        x=Xu, y=Yu, detail="grupo:N", order="k:Q", strokeWidth=alt.StrokeWidth("t3:Q", scale=grosor, legend=None))
+    puntas = alt.Chart(barras).mark_point(shape="triangle-left", filled=True, opacity=1, color=COL_TERCIL["T3 · alto"]).encode(
+        x=alt.X("x_punta:Q", scale=alt.Scale(domain=[0, 100]), axis=None), y=alt.Y("yt:Q", scale=alt.Scale(domain=[0, 108]), axis=None),
+        size=alt.Size("t3:Q", scale=alt.Scale(domain=[0, 1], range=[60, 260]), legend=None))
+
+    # cada grupo: pista gris = los 100 artículos del grupo; parte pintada = los que llegan al tercio alto
+    base_g = alt.Chart(barras)
+    pista = base_g.mark_rect(color="#e9e5dc").encode(
+        x=alt.X("x_ini:Q", scale=alt.Scale(domain=[0, 100]), axis=None), x2="x_tope:Q",
+        y=alt.Y("y_lo:Q", scale=alt.Scale(domain=[0, 108]), axis=None), y2="y_hi:Q", tooltip=tt
+    ).transform_calculate(y_lo="datum.y - 3", y_hi="datum.y + 3")
+    lleno = base_g.mark_rect(color=COL_TERCIL["T3 · alto"]).encode(
+        x=alt.X("x_ini:Q", scale=alt.Scale(domain=[0, 100]), axis=None), x2="x_fin:Q",
+        y=alt.Y("y_lo:Q", scale=alt.Scale(domain=[0, 108]), axis=None), y2="y_hi:Q", tooltip=tt
+    ).transform_calculate(y_lo="datum.y - 3", y_hi="datum.y + 3")
+    valor = base_g.mark_text(align="left", dx=6, fontSize=15, fontWeight=700, color=TINTA).encode(
+        x=alt.X("x_fin:Q", scale=alt.Scale(domain=[0, 100]), axis=None), y=Yu, text="pct_txt:N")
+    nombre = base_g.mark_text(align="left", baseline="bottom", fontSize=13.5, fontWeight=600, color=TINTA).encode(
+        x=alt.X("x_ini:Q", scale=alt.Scale(domain=[0, 100]), axis=None), y=alt.Y("y_nom:Q", scale=alt.Scale(domain=[0, 108]), axis=None), text="grupo:N"
+    ).transform_calculate(y_nom="datum.y + 9.2")
+    detalle = base_g.mark_text(align="left", baseline="bottom", fontSize=11.5, color="#6b665c").encode(
+        x=alt.X("x_ini:Q", scale=alt.Scale(domain=[0, 100]), axis=None), y=alt.Y("y_det:Q", scale=alt.Scale(domain=[0, 108]), axis=None), text="detalle:N"
+    ).transform_calculate(y_det="datum.y + 4.4")
+
+    # promedio: por definición, un tercio de todos los artículos está en el tercio alto
+    ref = pd.DataFrame({"x": [X0 + LARGO * base], "y": [0], "y2": [97], "yr": [5], "t": [f"promedio de todos: {pct(base, 0)}"]})
+    marcas = pd.DataFrame({"x": X0 + LARGO * base, "y": [y - 4.5 for y in filas], "y2": [y + 4.5 for y in filas]})
+    linea = alt.Chart(marcas).mark_rule(strokeDash=[3, 2], strokeWidth=1.5, color=TINTA).encode(
+        x=alt.X("x:Q", scale=alt.Scale(domain=[0, 100]), axis=None), y=alt.Y("y:Q", scale=alt.Scale(domain=[0, 108]), axis=None), y2="y2:Q")
+    rotulo = alt.Chart(ref).mark_text(align="left", dx=4, fontSize=11.5, fontStyle="italic", color=TENUE).encode(
+        x=alt.X("x:Q", scale=alt.Scale(domain=[0, 100]), axis=None), y=alt.Y("yr:Q", scale=alt.Scale(domain=[0, 108]), axis=None), text="t:N")
+
+    titulos = pd.DataFrame([{"x": 0, "y": 104, "t": "Los tercios de citas de la Figura 1"},
+                            {"x": X0, "y": 104, "t": "De cada 100 artículos del grupo, cuántos llegan al tercio alto"}])
+    tit = alt.Chart(titulos).mark_text(align="left", fontSize=12.5, fontStyle="italic", color=TENUE).encode(
+        x=alt.X("x:Q", scale=alt.Scale(domain=[0, 100]), axis=None), y=Yu, text="t:N")
+
+    graf = (col + col_nom + col_rango + flechas + puntas + pista + lleno + valor + nombre + detalle + linea + rotulo + tit
+            ).properties(width=660, height=330)
 
     # Grilla completa (apéndice B)
     rev_nom = ["poco citada", "media", "muy citada"]
@@ -296,8 +367,6 @@ def g_hallazgo(datos):
     tabla = pd.DataFrame({f"bibliografía {bib_nom[b]}": [f"{pct(grilla.loc[(r, b), 'mean'], 1)} ({fmt(grilla.loc[(r, b), 'size'], 0)})"
                                                            for r in range(3)] for b in range(3)},
                          index=pd.Index([f"revista {n}" for n in rev_nom], name="% en el tercio alto (artículos)"))
-    lim_rev = d["prestigio"].quantile([1 / 3, 2 / 3]).values
-    lim_bib = d["refs"].quantile([1 / 3, 2 / 3]).values
     textos = {
         "h_ninguna": pct(barras.t3[0], 0), "h_bib": pct(barras.t3[1], 0), "h_rev": pct(barras.t3[2], 0), "h_dos": pct(barras.t3[3], 0),
         "h_dos_no": pct(1 - barras.t3[3], 0), "h_base": pct(base, 0),
@@ -740,6 +809,11 @@ def calcular_textos(g, datos, m):
     T["t1_citas"] = pct(datos.loc[datos["tercil_real"] == "T1 · bajo", "citas"].sum() / c.sum(), 1)
     T["cortes"] = " y ".join(fmt(x, 0) for x in g["CORTES_Q"])
     T["top10"] = pct(df["is_top10_percent"].mean())
+    # Por qué la tasa de top 10 % no es 10 %: la etiqueta es de OpenAlex (todo el subcampo y año)
+    top_crudo = dfc["is_top10_percent"].astype(float)
+    T["top10_crudo"] = pct(top_crudo.mean())
+    T["n_fuera"] = fmt(int((~paso1).sum()), 0)
+    T["top10_fuera"] = pct(top_crudo[~paso1].mean())
 
     # Hallazgos
     T["rho_prest"] = fmt(spearmanr(df["source_pre_cites_per_work"], c, nan_policy="omit").statistic, 2)
