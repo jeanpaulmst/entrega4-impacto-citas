@@ -376,8 +376,8 @@ tbody tr:nth-child(even) td { background: rgba(28,27,25,.025); }
     <p>Una revista es <em>core</em> cuando OpenAlex, con datos del CWTS de Leiden, la marca como central en su campo. Para medir cada efecto usamos η²:
     la parte de la variación de log(1 + citas) que se explica sabiendo a qué grupo pertenece un artículo (0, nada; 1, todo).
     El tipo de acceso abierto (<code>oa_status</code>: si el artículo se puede leer gratis y por qué vía) solo explica η² = {{eta_oa}} de la varianza de log(1 + citas); cruzado con <code>source_is_core</code> sube a η² = {{eta_oa_core}}.
-    En las revistas <em>core</em> el {{core_top}} de los artículos es top 10 %, contra el {{nocore_top}} fuera de ellas. En el modelo con todas las columnas juntas, agregar el cruce de las dos como columna nueva no suma
-    (el error promedio del modelo, el MAE que se explica en §3, cambia −0,0002 ± 0,0006 en Ridge): el prestigio continuo de la revista ya captura ese escalón.</p>
+    En las revistas <em>core</em> el {{core_top}} de los artículos es top 10 %, contra el {{nocore_top}} fuera de ellas. Pero cuando probamos agregar ese cruce como dato extra a un modelo que ya usa todas las columnas, el error casi no se movió
+    (cambia −0,0002 ± 0,0006 en un modelo lineal, por debajo de su propia variación): el prestigio de la revista, medido por cuánto la citan, ya captura ese escalón.</p>
     <h4>Una que no (H4): el mes de publicación no cambia las citas</h4>
     <p>Esperábamos que los artículos de enero, con casi un año más de exposición, acumularan más citas. No pasa: la correlación de Spearman entre mes y citas es
     ρ = {{rho_mes}}, y la mediana de enero ({{mes_ene}} citas) es prácticamente la de diciembre ({{mes_dic}}). Con más de seis años de exposición, unos meses no se ven.</p>
