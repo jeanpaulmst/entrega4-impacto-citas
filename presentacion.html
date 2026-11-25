@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Impacto de citas</title>
+<style>
+:root{
+  --papel:#f7f3ea; --tinta:#1f1d1a; --gris:#6d675d; --filete:#d9d1c2;
+  --t1:#b9c7d6; --t2:#5b86b0; --t3:#1d3a5f; --nar:#c9552a; --piso:#a8a196;
+  --mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+  --serif:Georgia,"Times New Roman",serif;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--papel);color:var(--tinta);font-family:var(--sans)}
+body{overflow:hidden}
+.slide{position:absolute;inset:0;display:none;flex-direction:column;justify-content:center;
+  padding:6vh 8vw 10vh;max-width:1280px;margin:0 auto}
+.slide.on{display:flex;animation:entra .35s ease}
+@keyframes entra{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.kicker{font:13px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--nar);margin-bottom:14px}
+h1{font:600 clamp(32px,4.6vw,58px)/1.08 var(--serif);max-width:24ch}
+h2{font:600 clamp(26px,3.4vw,42px)/1.12 var(--serif);max-width:30ch;margin-bottom:22px}
+p,li{font-size:clamp(16px,1.5vw,21px);line-height:1.5;max-width:52em}
+.lead{color:var(--gris);margin-top:18px}
+ul{padding-left:1.2em}
+li{margin:6px 0}
+b.n{font:600 1em var(--mono)}
+.autores{margin-top:28px;color:var(--gris);font-size:16px}
+.grid{display:grid;gap:22px;margin-top:10px}
+.g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.card{border-top:2px solid var(--tinta);padding-top:12px}
+.card h3{font:600 15px var(--mono);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px}
+.card p{font-size:clamp(14px,1.25vw,17px)}
+.card .prob{color:var(--nar);font-size:14px;margin-top:8px}
+.big{font:600 clamp(40px,5.5vw,72px)/1 var(--serif)}
+.big small{font-size:.4em;color:var(--gris);font-family:var(--sans);font-weight:400}
+.stat p{font-size:clamp(14px,1.25vw,17px);color:var(--gris);margin-top:8px}
+.barras{display:flex;flex-direction:column;gap:12px;margin-top:6px}
+.fila{display:grid;grid-template-columns:190px 1fr 64px;align-items:center;gap:12px;font-size:16px}
+.pista{height:26px;background:#e9e3d6;position:relative}
+.relleno{height:100%}
+.fila .v{font:600 16px var(--mono);text-align:right}
+.prom{position:absolute;top:-4px;bottom:-4px;border-left:2px dashed var(--gris)}
+table{border-collapse:collapse;width:100%;font-size:clamp(14px,1.25vw,17px)}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--filete);vertical-align:top}
+th{font:600 13px var(--mono);text-transform:uppercase;color:var(--gris)}
+.si{color:#2f6b3a;font-weight:600}.medio{color:var(--nar);font-weight:600}
+.flujo{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:8px 0 18px}
+.paso{border:1px solid var(--tinta);padding:8px 12px;font:14px var(--mono)}
+.flecha{color:var(--gris)}
+.nota{font-size:15px;color:var(--gris);margin-top:20px}
+nav{position:fixed;left:0;right:0;bottom:0;display:flex;align-items:center;gap:16px;padding:12px 24px;
+  font:13px var(--mono);color:var(--gris)}
+nav button{background:none;border:1px solid var(--filete);color:var(--tinta);font:inherit;padding:6px 12px;cursor:pointer}
+nav button:hover{border-color:var(--tinta)}
+.progreso{flex:1;height:2px;background:var(--filete)}
+.progreso i{display:block;height:100%;background:var(--nar);transition:width .3s}
+@media (max-width:760px){
+  .slide{padding:5vh 16px 12vh;overflow-y:auto;justify-content:flex-start}
+  .g2,.g3,.g4{grid-template-columns:1fr}
+  .fila{grid-template-columns:120px 1fr 52px;font-size:14px}
+}
+</style>
+</head>
+<body>
+
+<!-- 1 -->
+<section class="slide">
+  <p class="kicker">Proyecto Integrador · Ciencia de Datos · UTN FRM · Grupo 10</p>
+  <h1>Un artículo científico sale hoy. ¿Va a importar?</h1>
+  <p class="lead">Una historia sobre 10.326 artículos, siete años de citas y una pregunta que tuvimos que cambiar en el camino.</p>
+  <p class="autores">Nicolás Bustelo · Joaquín Cuello · Augusto Lemos · Juan Pablo Masuet · Manuel Vazquez</p>
+</section>
+
+<!-- 2 -->
+<section class="slide">
+  <p class="kicker">El problema</p>
+  <h2>Las citas llegan años tarde. Las decisiones se toman hoy</h2>
+  <p>Una cita es cuando otro trabajo menciona al tuyo: es la forma en que la ciencia dice «esto me sirvió». Pero tardan años en acumularse.</p>
+  <p style="margin-top:14px">Mientras tanto, alguien tiene que decidir <b>ya</b>:</p>
+  <div class="grid g3" style="margin-top:14px">
+    <div class="card"><h3>Una editorial</h3><p>¿Qué artículos del mes difundimos?</p></div>
+    <div class="card"><h3>Un comité</h3><p>Hay 300 trabajos para revisar: ¿por cuáles empezamos?</p></div>
+    <div class="card"><h3>Una biblioteca</h3><p>¿Qué vale la pena destacar a los investigadores?</p></div>
+  </div>
+  <p class="lead">Hoy eso se decide por intuición. ¿Se podría anticipar con datos?</p>
+</section>
+
+<!-- 3 -->
+<section class="slide">
+  <p class="kicker">La idea</p>
+  <h2>Viajar a 2019 y mirar sólo lo que se sabía ese día</h2>
+  <p>Tomamos 10.326 artículos de Ciencia de Materiales publicados en 2019. De cada uno guardamos sólo lo que se conocía el día que salió:</p>
+  <div class="grid g4" style="margin-top:18px">
+    <div class="card"><h3>La revista</h3><p>¿Cuánto la citaban antes?</p></div>
+    <div class="card"><h3>La bibliografía</h3><p>¿Cuántas referencias trae?</p></div>
+    <div class="card"><h3>Los autores</h3><p>¿Qué trayectoria tenían?</p></div>
+    <div class="card"><h3>Las instituciones</h3><p>¿De dónde vienen?</p></div>
+  </div>
+  <p class="lead">Después adelantamos el reloj hasta octubre de 2026 y contamos cuántas citas recibió cada uno. Ahí está la respuesta contra la que nos medimos.</p>
+  <p class="nota">Cuidado que tuvimos: OpenAlex trae columnas calculadas con las propias citas. Usarlas sería mirar el futuro, así que las sacamos.</p>
+</section>
+
+<!-- 4 -->
+<section class="slide">
+  <p class="kicker">Lo primero que vimos</p>
+  <h2>Pocos artículos se llevan casi todas las citas</h2>
+  <p style="margin-bottom:14px">Partimos los artículos en tres grupos del mismo tamaño. Esto es lo que se lleva cada uno del total de citas:</p>
+  <div class="barras">
+    <div class="fila"><span>poco citados</span><div class="pista"><div class="relleno" style="width:2.5%;background:var(--t1)"></div></div><span class="v">2,5 %</span></div>
+    <div class="fila"><span>medianamente</span><div class="pista"><div class="relleno" style="width:14.5%;background:var(--t2)"></div></div><span class="v">14,5 %</span></div>
+    <div class="fila"><span>muy citados</span><div class="pista"><div class="relleno" style="width:83%;background:var(--t3)"></div></div><span class="v">83 %</span></div>
+  </div>
+  <p class="lead">Como en la música: la mayoría de las canciones casi no se escuchan y unos pocos hits concentran todo. La mitad de los artículos tiene 13 citas o menos; uno llegó a 1.722.</p>
+</section>
+
+<!-- 5 -->
+<section class="slide">
+  <p class="kicker">Las pistas</p>
+  <h2>Dos señales del día uno: dónde sale y qué tan bien se apoya</h2>
+  <p style="margin-bottom:14px">De cada 100 artículos de cada grupo, cuántos terminaron entre los muy citados (la línea punteada es lo esperable al azar):</p>
+  <div class="barras">
+    <div class="fila"><span>ninguna señal</span><div class="pista"><div class="relleno" style="width:2.1%;background:var(--t3)"></div><i class="prom" style="left:33.3%"></i></div><span class="v">2</span></div>
+    <div class="fila"><span>bibliografía larga</span><div class="pista"><div class="relleno" style="width:27.8%;background:var(--t3)"></div><i class="prom" style="left:33.3%"></i></div><span class="v">28</span></div>
+    <div class="fila"><span>revista muy citada</span><div class="pista"><div class="relleno" style="width:29.7%;background:var(--t3)"></div><i class="prom" style="left:33.3%"></i></div><span class="v">30</span></div>
+    <div class="fila"><span>las dos</span><div class="pista"><div class="relleno" style="width:71.7%;background:var(--t3)"></div><i class="prom" style="left:33.3%"></i></div><span class="v">72</span></div>
+  </div>
+  <p class="lead">Las señales se suman. Con eso parecía que alcanzaba para entrenar un modelo que predijera las citas.</p>
+</section>
+
+<!-- 6 -->
+<section class="slide">
+  <p class="kicker">El primer intento</p>
+  <h2>Le pedimos al modelo el número exacto. Y no salió</h2>
+  <div class="grid g2">
+    <div class="stat"><div class="big">14 <small>vs 14</small></div><p>En artículos normales (10 a 19 citas), el modelo da en el clavo.</p></div>
+    <div class="stat"><div class="big">169 <small>vs 54</small></div><p>En los grandes éxitos (más de 100 citas), se queda corto por tres veces. No los ve venir.</p></div>
+  </div>
+  <p class="lead">En promedio se equivoca por un factor de 2: a un artículo con 20 citas lo puede estimar en 10 o en 40.
+  Las señales dicen que un artículo va a andar bien; que sea un éxito depende del hallazgo, y eso no está en ningún dato del día uno.</p>
+</section>
+
+<!-- 7 -->
+<section class="slide">
+  <p class="kicker">El giro</p>
+  <h2>Cambiamos la pregunta</h2>
+  <p>El pronóstico del tiempo no te dice cuántos milímetros van a caer. Te dice si llevar paraguas, y con eso alcanza.</p>
+  <p style="margin-top:14px">Con los artículos pasa lo mismo. La editorial y el comité no necesitan el número exacto: necesitan saber</p>
+  <div class="grid g2" style="margin-top:18px">
+    <div class="card"><h3>¿Poco o muy citado?</h3><p>En qué grupo de los tres va a caer.</p></div>
+    <div class="card"><h3>¿Puede destacarse?</h3><p>Si tiene chances de estar en el 10 % más citado de su tema.</p></div>
+  </div>
+  <p class="lead">Preguntas más gruesas, pero que sí se pueden contestar con lo que se sabe el día uno.</p>
+</section>
+
+<!-- 8 -->
+<section class="slide">
+  <p class="kicker">Lo que logramos · 1</p>
+  <h2>Ubica al artículo en su grupo 2 de cada 3 veces</h2>
+  <div class="grid g3">
+    <div class="stat"><div class="big">65 %</div><p>Acierta el grupo (poco, medio o muy citado).</p></div>
+    <div class="stat"><div class="big">35 %</div><p>Lo que acierta adivinar sin mirar nada.</p></div>
+    <div class="stat"><div class="big">3 %</div><p>Los casos en que confunde uno poco citado con uno muy citado.</p></div>
+  </div>
+  <p class="lead">Cuando se equivoca, casi siempre es por un grupo de distancia: el grupo del medio es la frontera, y es ahí donde duda.</p>
+  <p class="nota">Medido sobre 2.066 artículos que el modelo nunca vio mientras aprendía.</p>
+</section>
+
+<!-- 9 -->
+<section class="slide">
+  <p class="kicker">Lo que logramos · 2</p>
+  <h2>Si tenés que leer 100 artículos, te dice por dónde empezar</h2>
+  <div class="grid g2">
+    <div class="stat"><div class="big">53 %</div><p>De los 10 que el modelo ve más prometedores, la mitad fue de verdad de los más citados de su tema.</p></div>
+    <div class="stat"><div class="big">1 %</div><p>En la mitad que el modelo descarta, casi ninguno se destacó.</p></div>
+  </div>
+  <p class="lead">Eligiendo al azar acertarías 12 de cada 100. Con los candidatos del modelo, 49: cuatro veces más.
+  No es un oráculo que adivina los éxitos; es un triage, como en una guardia: ordena por dónde empezar.</p>
+</section>
+
+<!-- 10 -->
+<section class="slide">
+  <p class="kicker">Lo que no se puede</p>
+  <h2>El hallazgo no está en los datos</h2>
+  <ul>
+    <li>Aun con las dos señales a favor, 28 de cada 100 artículos no llegan arriba. Lo que los diferencia es el contenido, y eso no se mide el día uno.</li>
+    <li>Todo vale para un campo (Ciencia de Materiales) y un año (2019).</li>
+    <li>El modelo rinde mejor con revistas que ya conoce: frente a una revista nueva pierde parte de su ventaja.</li>
+  </ul>
+  <p class="lead">Por eso lo presentamos como ayuda para priorizar, no como juez de qué ciencia vale.</p>
+</section>
+
+<!-- 11 -->
+<section class="slide">
+  <p class="kicker">Tu turno</p>
+  <h2>Una página para recorrer la historia y probar el modelo</h2>
+  <div class="grid g2">
+    <div class="card"><h3>Explorá</h3><p>Los 10.326 artículos en un solo gráfico: buscá uno, filtrá por tema y mirá qué esperaba el modelo y qué pasó en realidad.</p></div>
+    <div class="card"><h3>Probá</h3><p>Cargá un artículo que todavía no salió y mirá si el modelo lo marcaría como candidato.</p></div>
+  </div>
+  <p class="nota">Por dentro: un pipeline en Airflow baja los datos de OpenAlex; los modelos se eligen con validación cruzada y se prueban una sola vez sobre el 20 % reservado; la página se regenera con un comando.</p>
+</section>
+
+<!-- 12 -->
+<section class="slide">
+  <p class="kicker">Para llevarse</p>
+  <h1>No podemos predecir el éxito. Sí podemos decir dónde conviene mirar primero.</h1>
+  <p class="lead">Empezamos preguntando «¿cuántas citas?». Terminamos con una pregunta más útil: «¿por dónde empiezo?».</p>
+</section>
+
+<nav>
+  <button id="ant" aria-label="Anterior">←</button>
+  <span id="num"></span>
+  <div class="progreso"><i id="barra"></i></div>
+  <button id="sig" aria-label="Siguiente">→</button>
+</nav>
+
+<script>
+const S=[...document.querySelectorAll('.slide')];
+let i=0;
+function ir(n){
+  i=Math.max(0,Math.min(S.length-1,n));
+  S.forEach((s,k)=>s.classList.toggle('on',k===i));
+  document.getElementById('num').textContent=(i+1)+' / '+S.length;
+  document.getElementById('barra').style.width=((i+1)/S.length*100)+'%';
+  try{history.replaceState(null,'','#'+(i+1))}catch(e){}
+}
+document.getElementById('ant').onclick=()=>ir(i-1);
+document.getElementById('sig').onclick=()=>ir(i+1);
+addEventListener('keydown',e=>{
+  if(['ArrowRight','PageDown',' '].includes(e.key)){e.preventDefault();ir(i+1)}
+  if(['ArrowLeft','PageUp'].includes(e.key)){e.preventDefault();ir(i-1)}
+  if(e.key==='Home')ir(0); if(e.key==='End')ir(S.length-1);
+});
+let x0=null;
+addEventListener('touchstart',e=>x0=e.touches[0].clientX,{passive:true});
+addEventListener('touchend',e=>{if(x0===null)return;const d=e.changedTouches[0].clientX-x0;if(Math.abs(d)>50)ir(i+(d<0?1:-1));x0=null});
+ir((parseInt(location.hash.slice(1))||1)-1);
+</script>
+</body>
+</html>
