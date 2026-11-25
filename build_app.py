@@ -433,7 +433,7 @@ def g_triage(g):
 def g_comparacion(g):
     """Comparación de familias en CV para los dos objetivos (media ± desvío)."""
     r = g["tabla_reg_cv"].reset_index().rename(columns={"index": "modelo"})
-    r = r[~r["modelo"].str.contains("media")]
+    r = r[r["modelo"] != "piso (media)"]
     r = r.assign(lo=r["MAE cv"] - r["desvío MAE"], hi=r["MAE cv"] + r["desvío MAE"],
                  elegido=r["modelo"].eq("gradient boosting").map({True: "elegido", False: "otro"}))
     esc = alt.Scale(domain=["elegido", "otro", "piso"], range=[COL_PRED, COL_REAL, COL_RESTO])

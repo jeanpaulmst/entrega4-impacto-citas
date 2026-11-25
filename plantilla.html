@@ -95,6 +95,7 @@ figcaption b { color: var(--tinta); font-weight: 700; }
 /* detalle de cada sección: sigue al gráfico como parte del cuerpo */
 .apendice { margin: 14px 0 4px; }
 .apendice p { max-width: 62em; }
+.apendice-tit { font: 12px var(--mono); color: var(--gris); letter-spacing: .04em; text-transform: uppercase; margin: 22px 0 2px; padding-top: 10px; border-top: .5px solid var(--filete); }
 
 /* tablas tipo booktabs */
 .tabla { overflow-x: auto; margin: 8px 0 14px; }
@@ -320,6 +321,7 @@ tbody tr:nth-child(even) td { background: rgba(28,27,25,.025); }
   y al sacarlos la proporción entre los que quedan sube del {{top10_crudo}} al {{top10}}. No es un error: es la tasa base real de esta población (lo que se acertaría eligiendo artículos al azar),
   y es contra ella, y no contra un 10 %, que se mide al modelo.</p>
   <div class="apendice">
+    <p class="apendice-tit">Apéndice A</p>
     <h4>De dónde salen y cómo se obtienen</h4>
     <p>De la API de OpenAlex, con un DAG de Apache Airflow (<code>openalex_ingest</code>) en arquitectura medallón (los datos pasan por capas: bronce, tal como llegan; plata, limpios y enriquecidos): un sensor verifica que la API responda,
     <code>land_bronze</code> baja una muestra aleatoria de artículos (<code>type:article</code>, campo Materials Science, publicados en 2019, con abstract y no retractados),
@@ -357,11 +359,12 @@ tbody tr:nth-child(even) td { background: rgba(28,27,25,.025); }
    <figcaption><b>Figura 2.</b> Para cada grupo, porcentaje de sus artículos que terminó en el tercio más citado (los mismos tercios de la Figura 1).
    Los grupos se arman con dos datos que se conocen el día de publicación: el prestigio previo de la revista (citas por trabajo en 2012–2018) y la cantidad de referencias del artículo.
    «Revista muy citada» y «bibliografía larga» son el tercio de artículos con el valor más alto de cada variable; «ninguna», los que tienen las dos en el tercio más bajo.
-   La marca punteada sobre cada barra es el promedio de todos los artículos, que por definición es un tercio. La grilla completa, con los niveles intermedios, está más abajo.</figcaption>
+   La marca punteada sobre cada barra es el promedio de todos los artículos, que por definición es un tercio. La grilla completa, con los niveles intermedios, está en el apéndice B.</figcaption>
   </figure>
   <p class="puente">Esto le da al modelo de dónde agarrarse: son las dos columnas que más pesan en los tres modelos (§3). Pero también anticipa su límite:
   aun con las dos pistas a favor, el {{h_dos_no}} de los artículos no llega al tercio alto. Lo que falta probablemente está en el contenido del artículo, que estas columnas no ven.</p>
   <div class="apendice">
+    <p class="apendice-tit">Apéndice B</p>
     <h4>La grilla completa</h4>
     <p>Cada variable se parte en tres tercios de igual tamaño (empates partidos por orden): para la revista, cortes en {{h_cortes_rev}} citas por trabajo; para la bibliografía, en {{h_cortes_bib}} referencias.
     En cualquier fila, pasar de bibliografía corta a larga sube mucho la proporción; en cualquier columna, pasar de revista poco citada a muy citada también. Los artículos sin historial de revista
@@ -419,7 +422,7 @@ tbody tr:nth-child(even) td { background: rgba(28,27,25,.025); }
   el naranja es el elegido. Cuando dos modelos se pisan, nos quedamos con el más simple.</p>
   <figure>
    <div class="grafico" id="g-comparacion"></div>
-   <figcaption><b>Figura 3.</b> Comparación de tipos de modelo (familias) en validación cruzada (punto: media; línea: ± un desvío estándar entre folds). (a) En regresión, Gradient Boosting
+   <figcaption><b>Figura 3.</b> Comparación de tipos de modelo (familias) en validación cruzada (punto: media; línea: ± un desvío estándar entre folds). (a) En regresión, todos bajan el error del piso (predecir siempre la mediana) y Gradient Boosting
    le gana a Ridge por más que el desvío y se elige; el modelo de tercios usa ese mismo regresor. (b) En clasificación, con el umbral ajustado, la Regresión Logística ({{f1_log_cv}} ± {{f1_log_de}}) y Boosting
    ({{f1_gb_cv}} ± {{f1_gb_de}}) empatan: se queda la logística.</figcaption>
   </figure>
@@ -456,6 +459,7 @@ tbody tr:nth-child(even) td { background: rgba(28,27,25,.025); }
   <p class="puente">El modelo funciona como un triage, no como un oráculo: no dice cuáles van a ser los éxitos, pero si hay que leer cien artículos,
   dice por dónde empezar, y descarta con bastante seguridad a la mitad que casi nunca se destaca.</p>
   <div class="apendice">
+    <p class="apendice-tit">Apéndice C</p>
     <h4>Métricas y piso</h4>
     <p><b>Regresión:</b> MAE sobre log(1 + citas), que se lee como un factor multiplicativo de error (e<sup>MAE</sup>) y no deja que el 1 % de artículos con cientos de citas domine la pérdida (el error que el modelo intenta achicar mientras aprende).
     Piso: <code>DummyRegressor</code> (el piso de scikit-learn) con la mediana (MAE {{mae_piso}} en el test). <b>Clasificación:</b> f1 macro, que promedia el f1 de las dos clases; el piso que contesta siempre «no»
@@ -576,7 +580,7 @@ tbody tr:nth-child(even) td { background: rgba(28,27,25,.025); }
     <div class="resultado" aria-live="polite"><div class="grafico" id="g-proba"></div>
       <p id="dijo"></p>
       <p class="nota">Punto de partida: la mediana del entrenamiento en cada columna. Si las instituciones son 0, el índice h se completa con la mediana, igual que en el pipeline.
-      Las citas esperadas usan Ridge, la aproximación lineal (§3).</p></div>
+      Las citas esperadas usan Ridge, la aproximación lineal (apéndice C).</p></div>
   </div>
  </div>
 </section>
@@ -591,7 +595,7 @@ tbody tr:nth-child(even) td { background: rgba(28,27,25,.025); }
    calcula las predicciones fuera de muestra (cada una la hace un modelo que no vio ese artículo), exporta los coeficientes de la Regresión Logística y de Ridge, arma las ocho figuras con Altair y escribe esta página.
    Si los datos se actualizan, correrlo de nuevo actualiza la aplicación, y los números coinciden con los del notebook porque salen de su ejecución.</p>
    <p>Las predicciones de «Explorá» viajan con los datos; las de «Probá» se calculan en el navegador con la ecuación (2). Lo que no se puede escribir en el navegador
-   (el Gradient Boosting de la regresión) se reemplaza en «Probá» por Ridge, con su diferencia de error declarada en §3.</p>
+   (el Gradient Boosting de la regresión) se reemplaza en «Probá» por Ridge, con su diferencia de error declarada en el apéndice C.</p>
   </div>
   <p class="seccion" style="margin-top:22px">Referencias</p>
   <ol class="referencias">
