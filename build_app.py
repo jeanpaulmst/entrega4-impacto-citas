@@ -275,16 +275,17 @@ def g_hallazgo(datos):
     lim_bib = d["refs"].quantile([1 / 3, 2 / 3]).values
     r_lo, r_hi = fmt(lim_rev[0], 0), fmt(lim_rev[1], 0)
     b_lo, b_hi = fmt(lim_bib[0], 0), fmt(lim_bib[1], 0)
-    grupos = [("Ninguna de las dos", f"revista con menos de {r_lo} citas por trabajo y menos de {b_lo} referencias", 0, 0),
-              ("Sólo bibliografía larga", f"más de {b_hi} referencias, pero revista con menos de {r_lo} citas por trabajo", 0, 2),
-              ("Sólo revista muy citada", f"revista con más de {r_hi} citas por trabajo, pero menos de {b_lo} referencias", 2, 0),
-              ("Las dos", f"revista con más de {r_hi} citas por trabajo y más de {b_hi} referencias", 2, 2)]
+    grupos = [("Revista poco citada y bibliografía corta", f"revista: menos de {r_lo} citas por trabajo · bibliografía: menos de {b_lo} referencias", 0, 0),
+              ("Bibliografía larga, revista poco citada", f"revista: menos de {r_lo} citas por trabajo · bibliografía: más de {b_hi} referencias", 0, 2),
+              ("Revista muy citada, bibliografía corta", f"revista: más de {r_hi} citas por trabajo · bibliografía: menos de {b_lo} referencias", 2, 0),
+              ("Revista muy citada y bibliografía larga", f"revista: más de {r_hi} citas por trabajo · bibliografía: más de {b_hi} referencias", 2, 2)]
     barras = pd.DataFrame([{"grupo": nom, "detalle": det, "t3": grilla.loc[(r, b), "mean"], "n": int(grilla.loc[(r, b), "size"])}
                            for nom, det, r, b in grupos])
 
     # Un solo lienzo en unidades 0–100: a la izquierda los tercios de la Figura 1, a la derecha los grupos,
     # y una flecha de cada grupo al tercio alto, más gruesa cuanto más artículos del grupo llegan.
-    X0, LARGO = 44, 52                      # dónde empiezan las barras de los grupos y cuánto mide el 100 %
+    X0, LARGO = 44, 46                      # dónde empiezan las barras de los grupos y cuánto mide el 100 %
+                                            # (sobra lugar a la derecha para el porcentaje, que va después de la pista)
     filas = [86, 62, 38, 14]                # centro vertical de cada grupo (de arriba abajo)
     destino = [93, 86, 79, 72]              # dónde llega cada flecha dentro del bloque del tercio alto
     barras["y"], barras["yt"] = filas, destino
@@ -337,8 +338,9 @@ def g_hallazgo(datos):
         x=alt.X("x_ini:Q", scale=alt.Scale(domain=[0, 100]), axis=None), x2="x_fin:Q",
         y=alt.Y("y_lo:Q", scale=alt.Scale(domain=[0, 108]), axis=None), y2="y_hi:Q", tooltip=tt
     ).transform_calculate(y_lo="datum.y - 3", y_hi="datum.y + 3")
+    # el porcentaje va al final de la pista gris, no de la parte pintada, para que la marca del promedio no lo tape
     valor = base_g.mark_text(align="left", dx=6, fontSize=15, fontWeight=700, color=TINTA).encode(
-        x=alt.X("x_fin:Q", scale=alt.Scale(domain=[0, 100]), axis=None), y=Yu, text="pct_txt:N")
+        x=alt.X("x_tope:Q", scale=alt.Scale(domain=[0, 100]), axis=None), y=Yu, text="pct_txt:N")
     nombre = base_g.mark_text(align="left", baseline="bottom", fontSize=13.5, fontWeight=600, color=TINTA).encode(
         x=alt.X("x_ini:Q", scale=alt.Scale(domain=[0, 100]), axis=None), y=alt.Y("y_nom:Q", scale=alt.Scale(domain=[0, 108]), axis=None), text="grupo:N"
     ).transform_calculate(y_nom="datum.y + 9.2")
