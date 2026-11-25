@@ -92,9 +92,15 @@ figcaption b { color: var(--tinta); font-weight: 700; }
 .leyenda-col { display: flex; gap: 16px; flex-wrap: wrap; font-size: 13px; color: var(--tinta-2); margin: 4px 0; }
 .leyenda-col i { display: inline-block; width: 11px; height: 11px; margin-right: 6px; vertical-align: -1px; }
 
-/* detalle de cada sección: sigue al gráfico como parte del cuerpo */
-.apendice { margin: 14px 0 4px; }
-.apendice p { max-width: 62em; }
+/* «Cómo lo sabemos»: un apéndice plegado */
+details { margin: 18px 0 4px; border: .5px solid var(--tinta-2); background: rgba(255,255,255,.55); }
+summary { cursor: pointer; padding: 9px 14px; font-weight: 600; list-style: none; display: flex; align-items: baseline; gap: 10px; }
+summary::-webkit-details-marker { display: none; }
+summary::before { content: "▸"; color: var(--enlace); transition: transform .2s; }
+details[open] summary::before { transform: rotate(90deg); }
+summary small { font: 12px var(--mono); color: var(--gris); font-weight: 400; margin-left: auto; }
+details > div { padding: 2px 18px 14px; border-top: .5px solid var(--filete); }
+details p { max-width: 62em; }
 
 /* tablas tipo booktabs */
 .tabla { overflow-x: auto; margin: 8px 0 14px; }
@@ -136,10 +142,10 @@ tbody tr:nth-child(even) td { background: rgba(28,27,25,.025); }
 .mirar b:first-child { font-variant-caps: all-small-caps; letter-spacing: .08em; font-size: 15px; margin-right: 4px; }
 .puente { max-width: 52em; font-style: italic; color: var(--tinta-2); margin-top: 12px; }
 .decision { max-width: 52em; border-left: 2px solid var(--tinta-2); padding: 2px 0 2px 12px; margin: 14px 0 4px; }
-.glosario { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 5px 16px; max-width: 58em; font-size: 15px; line-height: 1.45; margin: 12px 0 16px; padding: 10px 0; border-top: .5px solid var(--filete); border-bottom: .5px solid var(--filete); }
-.glosario dt { font-weight: 600; }
-.glosario dd { margin: 0; }
-@media (max-width: 760px) { .glosario { grid-template-columns: minmax(0, 1fr); } .glosario dd { margin-bottom: 6px; } }
+.glosario { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 24px; max-width: 62em; font-size: 13.8px; line-height: 1.42; color: var(--tinta-2); margin: 14px 0 18px; padding: 10px 16px 12px; border: .5px solid var(--filete); border-left: 2.5px solid var(--tinta-2); background: rgba(28,27,25,.025); border-radius: 2px; }
+.glosario-tit { grid-column: 1 / -1; font: 700 13.5px var(--serif); font-variant-caps: all-small-caps; letter-spacing: .08em; color: var(--tinta); margin: 0 0 2px; }
+.glosario b { color: var(--tinta); font-weight: 600; }
+@media (max-width: 760px) { .glosario { grid-template-columns: minmax(0, 1fr); } }
 .decision b:first-child { font-variant-caps: all-small-caps; letter-spacing: .08em; margin-right: 4px; }
 
 /* el recorrido de las cuatro entregas */
@@ -220,7 +226,7 @@ tbody tr:nth-child(even) td { background: rgba(28,27,25,.025); }
   .resultado { position: static; }
   .documento { margin-top: 12px; }
 }
-@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } summary::before { transition: none; } }
 </style>
 </head>
 <body>
@@ -319,7 +325,7 @@ tbody tr:nth-child(even) td { background: rgba(28,27,25,.025); }
   artículos con resumen (<em>abstract</em>), no retractados y publicados en revistas. Los 1.317 que no salían en una revista (repositorios, libros) casi nunca eran top 10 % (0,3 %),
   y al sacarlos la proporción entre los que quedan sube del 10,5 % al 12,0 %. No es un error: es la tasa base real de esta población (lo que se acertaría eligiendo artículos al azar),
   y es contra ella, y no contra un 10 %, que se mide al modelo.</p>
-  <div class="apendice">
+  <details><summary>Cómo lo sabemos <small>apéndice A</small></summary><div>
     <h4>De dónde salen y cómo se obtienen</h4>
     <p>De la API de OpenAlex, con un DAG de Apache Airflow (<code>openalex_ingest</code>) en arquitectura medallón (los datos pasan por capas: bronce, tal como llegan; plata, limpios y enriquecidos): un sensor verifica que la API responda,
     <code>land_bronze</code> baja una muestra aleatoria de artículos (<code>type:article</code>, campo Materials Science, publicados en 2019, con abstract y no retractados),
@@ -337,7 +343,7 @@ tbody tr:nth-child(even) td { background: rgba(28,27,25,.025); }
     <p><b>Contienen la respuesta</b> (se calculan con las citas del propio artículo): <code>cited_by_count</code>, <code>fwci</code>, <code>citation_normalized_percentile_*</code>,
     <code>cited_by_percentile_year_*</code>, <code>counts_by_year</code>; <code>citation_normalized_percentile_value ≥ 0,90</code> reproduce <code>is_top10_percent</code> en el 100 % de las filas.
     <b>Crecen después de publicar</b>: <code>locations_count</code>, <code>indexed_in_count</code> y <code>mesh_count</code>. Las métricas de revista y autores sólo cuentan trabajos anteriores a 2019.</p>
-  </div>
+  </div></details>
  </div>
 </section>
 
@@ -361,7 +367,7 @@ tbody tr:nth-child(even) td { background: rgba(28,27,25,.025); }
   </figure>
   <p class="puente">Esto le da al modelo de dónde agarrarse: son las dos columnas que más pesan en los tres modelos (§3). Pero también anticipa su límite:
   aun con las dos pistas a favor, el 28 % de los artículos no llega al tercio alto. Lo que falta probablemente está en el contenido del artículo, que estas columnas no ven.</p>
-  <div class="apendice">
+  <details><summary>Cómo lo sabemos <small>apéndice B</small></summary><div>
     <h4>La grilla completa</h4>
     <p>Cada variable se parte en tres tercios de igual tamaño (empates partidos por orden): para la revista, cortes en 15 y 42 citas por trabajo; para la bibliografía, en 27 y 46 referencias.
     En cualquier fila, pasar de bibliografía corta a larga sube mucho la proporción; en cualquier columna, pasar de revista poco citada a muy citada también. Los artículos sin historial de revista
@@ -378,7 +384,7 @@ tbody tr:nth-child(even) td { background: rgba(28,27,25,.025); }
     <h4>Una que no (H4): el mes de publicación no cambia las citas</h4>
     <p>Esperábamos que los artículos de enero, con casi un año más de exposición, acumularan más citas. No pasa: la correlación de Spearman entre mes y citas es
     ρ = -0,014, y la mediana de enero (14 citas) es prácticamente la de diciembre (12). Con más de seis años de exposición, unos meses no se ven.</p>
-  </div>
+  </div></details>
  </div>
 </section>
 
@@ -391,18 +397,13 @@ tbody tr:nth-child(even) td { background: rgba(28,27,25,.025); }
   más gruesas, que son las que alguien necesita contestar en la práctica —un editor que decide qué difundir, un comité que tiene que leer cientos de artículos—.
   Separar los artículos muy citados de los poco citados es mucho más alcanzable que adivinar el número.
   Por eso hay tres modelos: uno por pregunta, con las mismas 12 columnas y la misma partición entre entrenamiento y test.</p>
-  <p class="nota">Para leer esta sección:</p>
-  <dl class="glosario">
-    <dt>Entrenamiento y test</dt><dd>El 80 % de los artículos se usa para que el modelo aprenda (entrenamiento). El 20 % restante se guarda sin mirar y se usa una sola vez, al final, para medirlo (test).</dd>
-    <dt>Validación cruzada (CV)</dt><dd>Para elegir entre modelos sin tocar el test, el entrenamiento se parte en cinco partes (<em>folds</em>): cada modelo aprende con cuatro y se mide en la quinta, rotando cinco veces.</dd>
-    <dt>Piso</dt><dd>La regla más simple posible, que no mira ninguna columna: predecir para todos la mediana, o decir siempre «no es top 10 %». Un modelo sirve si le gana al piso.</dd>
-    <dt>MAE</dt><dd>El error promedio, medido en log(1 + citas). Se lee como un factor: un MAE de 0,69 quiere decir que la estimación suele quedar en el doble o en la mitad de la real.</dd>
-    <dt>Ridge y regresión logística</dt><dd>Modelos lineales: suman las columnas multiplicadas por un peso cada una. Ridge estima un número; la logística convierte esa suma en una probabilidad.</dd>
-    <dt>Gradient Boosting</dt><dd>Combina cientos de árboles de decisión chicos (reglas del tipo «si la revista tiene más de tantas citas por trabajo…»), cada uno corrigiendo los errores de los anteriores. Capta relaciones que no son líneas rectas, pero no se puede escribir como una fórmula corta.</dd>
-    <dt>Umbral</dt><dd>La probabilidad a partir de la cual el modelo marca a un artículo como candidato. Por defecto es 0,5; como los top 10 % son pocos, conviene bajarlo.</dd>
-    <dt>f1 macro</dt><dd>Nota de 0 a 1 para un clasificador: combina cuántos de los casos buscados encuentra y cuántas de sus alarmas son ciertas, y la promedia entre las dos clases (top 10 % y resto).</dd>
-    <dt>Triage</dt><dd>Una primera selección: no decide, pero dice por dónde empezar a mirar.</dd>
-  </dl>
+  <div class="glosario" aria-label="Guía rápida para leer esta sección">
+    <p class="glosario-tit">Para leer esta sección</p>
+    <div><b>Test y piso.</b> Medimos cada modelo en artículos que no vio al aprender (<em>test</em>, 20 %) y le exigimos ganarle al <em>piso</em> (adivinar siempre la mediana o decir siempre «no»).</div>
+    <div><b>Modelos lineales (Ridge / Logística).</b> Suman las columnas multiplicadas por un peso. <em>Ridge</em> estima cuántas citas; la <em>Logística</em> convierte esa suma en probabilidad.</div>
+    <div><b>Gradient Boosting.</b> Encadena cientos de árboles de decisión cortos donde cada uno corrige los errores de los anteriores; capta relaciones curvas.</div>
+    <div><b>Las notas (MAE y f1 macro).</b> <em>MAE</em> mide el error en citas (menos es mejor; 0,70 ≈ errar por ×2) y <em>f1 macro</em> califica de 0 a 1 al detector de top 10 % (más es mejor).</div>
+  </div>
   <div class="tabla preguntas"><table>
    <thead><tr><th>Pregunta</th><th>Para qué sirve</th><th>Modelo</th><th>Resultado en el test</th><th>¿Se pudo responder?</th></tr></thead>
    <tbody>
@@ -455,7 +456,7 @@ tbody tr:nth-child(even) td { background: rgba(28,27,25,.025); }
   </figure>
   <p class="puente">El modelo funciona como un triage, no como un oráculo: no dice cuáles van a ser los éxitos, pero si hay que leer cien artículos,
   dice por dónde empezar, y descarta con bastante seguridad a la mitad que casi nunca se destaca.</p>
-  <div class="apendice">
+  <details><summary>Cómo lo sabemos <small>apéndice C</small></summary><div>
     <h4>Métricas y piso</h4>
     <p><b>Regresión:</b> MAE sobre log(1 + citas), que se lee como un factor multiplicativo de error (e<sup>MAE</sup>) y no deja que el 1 % de artículos con cientos de citas domine la pérdida (el error que el modelo intenta achicar mientras aprende).
     Piso: <code>DummyRegressor</code> (el piso de scikit-learn) con la mediana (MAE 1,159 en el test). <b>Clasificación:</b> f1 macro, que promedia el f1 de las dos clases; el piso que contesta siempre «no»
@@ -494,7 +495,7 @@ tbody tr:nth-child(even) td { background: rgba(28,27,25,.025); }
     <h4>Qué cambió desde la Entrega 3</h4>
     <p>El Objetivo 3 pasó de quintiles (cinco grupos de igual tamaño) a terciles (tres) de citas (cortes en 6 y 23), y el modelo por terciles usa los hiperparámetros que elige la grilla de la Sección 2.4 en vez de valores
     escritos a mano. Con terciles, el regresor discretizado (su estimación de citas, cortada en tercios) da f1 macro 0,646 y kappa cuadrático (acuerdo entre el tercio predicho y el real, descontado el azar, que castiga más saltar dos tercios que uno) 0,669 en el test.</p><div class="tabla"><table><thead><tr><th>Modelo (test)</th><th>f1_macro</th><th>f1_macro cv</th><th>accuracy</th><th>acierto ±1 tercil</th><th>MAE en terciles</th><th>kappa cuadrático</th></tr></thead><tbody><tr><td>Piso (clase más frecuente)</td><td>0,172</td><td>0,170</td><td>0,348</td><td>0,663</td><td>0,989</td><td>0,000</td></tr><tr><td>Gradient Boosting clasificador</td><td>0,649</td><td>0,634</td><td>0,647</td><td>0,974</td><td>0,379</td><td>0,672</td></tr><tr><td>Regresión discretizada (elegido)</td><td>0,646</td><td>0,635</td><td>0,647</td><td>0,970</td><td>0,383</td><td>0,669</td></tr></tbody></table></div>
-  </div>
+  </div></details>
  </div>
 </section>
 
